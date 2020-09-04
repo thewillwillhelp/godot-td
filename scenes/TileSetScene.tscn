@@ -1,0 +1,44 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://assets/images/stone_wall-tile.png" type="Texture" id=1]
+[ext_resource path="res://assets/images/grass_tile.png" type="Texture" id=2]
+[ext_resource path="res://assets/images/towers/simple-tower.png" type="Texture" id=3]
+
+[sub_resource type="NavigationPolygon" id=1]
+vertices = PoolVector2Array( 0, 0, 50, 0, 50, 50, 0, 50 )
+polygons = [ PoolIntArray( 0, 1, 2, 3 ) ]
+outlines = [ PoolVector2Array( 0, 0, 50, 0, 50, 50, 0, 50 ) ]
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 25, 25 )
+
+[node name="TileSetScene" type="Node2D"]
+
+[node name="stone_wall" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+centered = false
+region_rect = Rect2( 0, 0, 50, 50 )
+
+[node name="grass" type="Sprite" parent="."]
+position = Vector2( 80, 0 )
+texture = ExtResource( 2 )
+centered = false
+
+[node name="NavigationPolygonInstance" type="NavigationPolygonInstance" parent="grass"]
+navpoly = SubResource( 1 )
+
+[node name="test_sprite" type="Sprite" parent="."]
+
+[node name="simple_tower" type="Sprite" parent="."]
+position = Vector2( 160, 0 )
+texture = ExtResource( 3 )
+centered = false
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="Area2D" type="Area2D" parent="simple_tower"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="simple_tower/Area2D"]
+position = Vector2( 25, 25 )
+shape = SubResource( 2 )

@@ -1,0 +1,109 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://scenes/BattleFieldScene.gd" type="Script" id=1]
+[ext_resource path="res://assets/fonts/dynamic_bebas.tres" type="DynamicFont" id=2]
+[ext_resource path="res://scenes/tileset_from_scene.tres" type="TileSet" id=3]
+[ext_resource path="res://scenes/MobScene.tscn" type="PackedScene" id=4]
+[ext_resource path="res://scenes/BuildingMenu.tscn" type="PackedScene" id=5]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 25, 25 )
+
+[node name="BattleFieldScene" type="Node2D"]
+script = ExtResource( 1 )
+mob_scene = ExtResource( 4 )
+
+[node name="GlobalBackground" type="ColorRect" parent="."]
+margin_right = 400.0
+margin_bottom = 720.0
+color = Color( 0.407843, 0.423529, 0.427451, 1 )
+
+[node name="BattleField" type="ColorRect" parent="."]
+margin_right = 400.0
+margin_bottom = 720.0
+color = Color( 0.380392, 0.670588, 0.113725, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Navigation2D" type="Navigation2D" parent="BattleField"]
+
+[node name="BackgroundTileMap" type="TileMap" parent="BattleField/Navigation2D"]
+tile_set = ExtResource( 3 )
+cell_size = Vector2( 50, 50 )
+cell_tile_origin = 1
+format = 1
+tile_data = PoolIntArray( 131074, 1, 0, 131075, 1, 0, 131076, 1, 0, 196610, 1, 0, 196611, 1, 0, 196612, 1, 0, 262146, 1, 0, 262147, 1, 0, 262148, 1, 0 )
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="MainTileMap" type="TileMap" parent="BattleField/Navigation2D"]
+tile_set = ExtResource( 3 )
+cell_size = Vector2( 50, 50 )
+cell_tile_origin = 1
+collision_layer = 2
+format = 1
+tile_data = PoolIntArray( 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 1, 0, 4, 0, 0, 5, 0, 0, 6, 0, 0, 7, 0, 0, 65536, 0, 0, 65537, 1, 0, 65538, 1, 0, 65539, 1, 0, 65540, 1, 0, 65541, 1, 0, 65542, 1, 0, 65543, 0, 0, 131072, 0, 0, 131073, 1, 0, 131077, 1, 0, 131078, 1, 0, 131079, 0, 0, 196608, 0, 0, 196609, 1, 0, 196613, 1, 0, 196614, 1, 0, 196615, 0, 0, 262144, 0, 0, 262145, 1, 0, 262149, 1, 0, 262150, 1, 0, 262151, 0, 0, 327680, 0, 0, 327681, 1, 0, 327682, 1, 0, 327683, 1, 0, 327684, 1, 0, 327685, 1, 0, 327686, 1, 0, 327687, 0, 0, 393216, 0, 0, 393217, 1, 0, 393218, 1, 0, 393219, 1, 0, 393220, 1, 0, 393221, 1, 0, 393222, 1, 0, 393223, 0, 0, 458752, 0, 0, 458753, 1, 0, 458754, 1, 0, 458755, 1, 0, 458756, 1, 0, 458757, 1, 0, 458758, 1, 0, 458759, 0, 0, 524288, 0, 0, 524289, 1, 0, 524290, 1, 0, 524291, 1, 0, 524292, 1, 0, 524293, 1, 0, 524294, 1, 0, 524295, 0, 0, 589824, 0, 0, 589825, 1, 0, 589826, 1, 0, 589827, 1, 0, 589828, 1, 0, 589829, 1, 0, 589830, 1, 0, 589831, 0, 0, 655360, 0, 0, 655361, 1, 0, 655362, 1, 0, 655363, 1, 0, 655364, 1, 0, 655365, 1, 0, 655366, 1, 0, 655367, 0, 0, 720896, 0, 0, 720897, 1, 0, 720898, 1, 0, 720899, 1, 0, 720900, 1, 0, 720901, 1, 0, 720902, 1, 0, 720903, 0, 0, 786432, 0, 0, 786433, 1, 0, 786434, 1, 0, 786435, 1, 0, 786436, 1, 0, 786437, 1, 0, 786438, 1, 0, 786439, 0, 0, 851968, 0, 0, 851969, 1, 0, 851970, 1, 0, 851971, 1, 0, 851972, 1, 0, 851973, 1, 0, 851974, 1, 0, 851975, 0, 0, 917504, 0, 0, 917505, 0, 0, 917506, 0, 0, 917507, 0, 0, 917508, 1, 0, 917509, 0, 0, 917510, 0, 0, 917511, 0, 0 )
+
+[node name="Line2D" type="Line2D" parent="BattleField"]
+width = 3.0
+default_color = Color( 0.937255, 0.247059, 0.113725, 1 )
+
+[node name="mob_create_timer" type="Timer" parent="."]
+wait_time = 0.4
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="ExitArea" type="Area2D" parent="."]
+
+[node name="ExitCollisionShape" type="CollisionShape2D" parent="ExitArea"]
+position = Vector2( 225, 725 )
+shape = SubResource( 1 )
+
+[node name="ScoreLabel" type="Label" parent="."]
+margin_left = 14.0
+margin_top = 2.0
+margin_right = 79.0
+margin_bottom = 53.0
+custom_fonts/font = ExtResource( 2 )
+text = "Score: 0
+Gold: 0"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="BuildingMenu" parent="." instance=ExtResource( 5 )]
+visible = false
+position = Vector2( 0, 510 )
+
+[node name="BuildingMenuButton" type="Button" parent="."]
+margin_left = 330.0
+margin_top = 10.0
+margin_right = 385.0
+margin_bottom = 40.0
+custom_fonts/font = ExtResource( 2 )
+text = "Build"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="StartWaveButton" type="Button" parent="."]
+margin_left = 220.0
+margin_top = 10.0
+margin_right = 317.0
+margin_bottom = 40.0
+custom_fonts/font = ExtResource( 2 )
+text = "Next wave"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="gui_input" from="BattleField" to="." method="_on_BattleField_gui_input"]
+[connection signal="timeout" from="mob_create_timer" to="." method="_on_mob_create_timer_timeout"]
+[connection signal="area_entered" from="ExitArea" to="." method="_on_ExitArea_area_entered"]
+[connection signal="close_menu" from="BuildingMenu" to="." method="_on_BuildingMenu_close_menu"]
+[connection signal="tower_selected" from="BuildingMenu" to="." method="_on_BuildingMenu_tower_selected"]
+[connection signal="wall_selected" from="BuildingMenu" to="." method="_on_BuildingMenu_wall_selected"]
+[connection signal="pressed" from="BuildingMenuButton" to="." method="_on_BuildingMenuButton_pressed"]
+[connection signal="pressed" from="StartWaveButton" to="." method="_on_StartWaveButton_pressed"]
