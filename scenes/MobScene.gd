@@ -16,7 +16,7 @@ func _ready():
 func _process(delta):
     var distance = delta * speed
     move_along_path(distance)
-    
+
 func move_along_path(distance):
     var start_position = position
     for i in range(escape_path.size()):
@@ -29,7 +29,7 @@ func move_along_path(distance):
             set_process(false)
         start_position = escape_path[0]
         escape_path.remove(0)
-    
+
 func set_path(value):
     escape_path = value
     if value.size() == 0:
@@ -51,4 +51,4 @@ func _on_Area2D_area_entered(area: Area2D) -> void:
     else:
         pass
         #print_debug("Not a bullet")
-    
+

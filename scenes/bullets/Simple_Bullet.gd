@@ -18,10 +18,10 @@ func move_to_target(step_size):
     var distance_to_next = position.distance_to(target)
     if step_size <= distance_to_next and step_size >= 0:
         position = position.linear_interpolate(target, step_size / distance_to_next)
-    else:        
+    else:
         set_process(false)
         queue_free()
-        
+
 func set_target(value: Vector2):
     target = value
     set_process(true)
