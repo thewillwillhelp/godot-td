@@ -2,7 +2,11 @@ extends Node2D
 
 signal was_killed
 
+const HP_INDICATOR_MAX_WIDTH = 38
+
 var escape_path = [] setget set_path
+var hit_points = 4
+var max_hp = 10
 var speed = 100
 var world_tilemap: TileMap
 var processed_steps = 0
@@ -10,6 +14,7 @@ var enemy_type = 1
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+    update_hp_label()
     set_process(false)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -36,6 +41,22 @@ func set_path(value):
         return
     set_process(true)
 
+func update_hp_label():
+    var life_indicator = $HpIndicator/LifeIndicator
+    var hp_indicator_width = float(hit_points)/float(max_hp)*HP_INDICATOR_MAX_WIDTH
+    life_indicator.rect_size.x = hp_indicator_width
+
+func receive_damage(bullet: Area2D):
+    var damage_range = bullet.max_damage - bullet.min_damage
+    var damage = bullet.min_damage + randi() % damage_range
+    hit_points = hit_points - damage
+
+    update_hp_label()
+    # @TODO add some animation
+
+    if hit_points <= 0:
+        emit_signal("was_killed")
+        queue_free()
 
 func _on_Area2D_area_shape_entered(area_id, area, area_shape, self_shape):
     # print_debug("Collision, area_shape_entered")
@@ -44,11 +65,7 @@ func _on_Area2D_area_shape_entered(area_id, area, area_shape, self_shape):
 
 func _on_Area2D_area_entered(area: Area2D) -> void:
     if "bullet_type" in area:
-        # print_debug("Collision, area_entered, BULLET")
-        emit_signal("was_killed")
-        queue_free()
+        # @TODO damage depends on bullet_type
+        receive_damage(area)
         area.queue_free()
-    else:
-        pass
-        #print_debug("Not a bullet")
 

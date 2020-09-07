@@ -18,5 +18,35 @@ collision_layer = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
 shape = SubResource( 1 )
+
+[node name="HpIndicator" type="ColorRect" parent="."]
+margin_left = -20.0
+margin_top = -22.0
+margin_right = 20.0
+margin_bottom = -18.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="DamageIndicator" type="ColorRect" parent="HpIndicator"]
+margin_left = 1.0
+margin_top = 1.0
+margin_right = 39.0
+margin_bottom = 3.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="LifeIndicator" type="ColorRect" parent="HpIndicator"]
+margin_left = 1.0
+margin_top = 1.0
+margin_right = 39.0
+margin_bottom = 3.0
+color = Color( 0.0313726, 1, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 [connection signal="area_entered" from="Area2D" to="." method="_on_Area2D_area_entered"]
 [connection signal="area_shape_entered" from="Area2D" to="." method="_on_Area2D_area_shape_entered"]
