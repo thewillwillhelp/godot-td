@@ -3,7 +3,8 @@ extends Node2D
 var bullet_type: String = "simple_bullet"
 var target: Vector2 setget set_target
 var speed: int = 200
-var minimal_damage: int = 1
+var min_damage: int = 1
+var max_damage: int = 10
 # Called when the node enters the scene tree for the first time.
 func _ready():
     set_process(false)

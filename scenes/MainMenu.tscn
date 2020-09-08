@@ -54,7 +54,7 @@ align = 1
 [node name="CenterContainer" type="CenterContainer" parent="TextureRect/VBoxContainer"]
 margin_top = 87.0
 margin_right = 350.0
-margin_bottom = 687.0
+margin_bottom = 670.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 __meta__ = {
@@ -62,10 +62,10 @@ __meta__ = {
 }
 
 [node name="MenuButtons" type="VBoxContainer" parent="TextureRect/VBoxContainer/CenterContainer"]
-margin_left = 74.0
-margin_top = 224.0
-margin_right = 274.0
-margin_bottom = 376.0
+margin_left = 75.0
+margin_top = 215.0
+margin_right = 275.0
+margin_bottom = 367.0
 rect_min_size = Vector2( 200, 0 )
 custom_constants/separation = 13
 alignment = 1
