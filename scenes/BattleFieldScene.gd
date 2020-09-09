@@ -4,6 +4,9 @@ export (PackedScene) var mob_scene: PackedScene
 
 var tower_scene: PackedScene = preload("res://scenes/towers/SimpleTower.tscn")
 
+const PREVIEW_TOWER_RECT: Rect2 = Rect2(50, 0, 50, 100)
+const PREVIEW_WALL_RECT: Rect2 = Rect2(0, -50, 50, 100)
+
 var field_structures = []
 var start_position = Vector2(3, 0)
 var end_position = Vector2(4, 14)
@@ -121,13 +124,13 @@ func update_score_label():
 
 
 func _on_BuildingMenu_tower_selected():
-    print_debug("tower selected")
     target_building = "tower"
+    update_building_preview(target_building)
 
 
 func _on_BuildingMenu_wall_selected():
-    print_debug("wall selected")
     target_building = "wall"
+    update_building_preview(target_building)
 
 
 func _on_BuildingMenu_close_menu():
@@ -162,9 +165,22 @@ func _on_BattleField_gui_input(event):
                     add_tower(event.position - battleFieldRect.position)
 
                 target_building = ""
+                update_building_preview()
 
         if event.button_index == BUTTON_RIGHT:
             pass
 
     elif event is InputEventMouseMotion:
         pass
+
+func update_building_preview(building_target: String = ""):
+    var building_preview_sprite = $SelectionPreview/Button/Sprite
+    if building_target == "tower":
+        building_preview_sprite.set_region_rect(PREVIEW_TOWER_RECT)
+        building_preview_sprite.visible = true
+    elif building_target == "wall":
+        building_preview_sprite.set_region_rect(PREVIEW_WALL_RECT)
+        building_preview_sprite.visible = true
+    else:
+        building_preview_sprite.visible = false
+
