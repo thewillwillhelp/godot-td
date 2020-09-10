@@ -44,6 +44,13 @@ func add_construction(position, construction_name):
 
     remove_hidden_structures(cell_position)
 
+func remove_construction(position):
+    var construction_tile = main_tile_map.get_tileset().find_tile_by_name("grass")
+    var cell_position = main_tile_map.world_to_map(position)
+    main_tile_map.set_cellv(cell_position, construction_tile)
+
+    remove_hidden_structures(cell_position)
+
 func add_stone_wall(position):
     if gold < 5:
         return
@@ -160,6 +167,8 @@ func _on_BattleField_gui_input(event):
                     add_stone_wall(event.position - battleFieldRect.position)
                 elif target_building == "tower":
                     add_tower(event.position - battleFieldRect.position)
+                elif target_building == "DESTROY":
+                    remove_construction(event.position - battleFieldRect.position)
 
                 target_building = ""
 
@@ -168,3 +177,7 @@ func _on_BattleField_gui_input(event):
 
     elif event is InputEventMouseMotion:
         pass
+
+
+func _on_BuildingMenu_destroy_construction_selected():
+    target_building = "DESTROY"
