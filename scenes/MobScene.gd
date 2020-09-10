@@ -5,15 +5,17 @@ signal was_killed
 const HP_INDICATOR_MAX_WIDTH = 38
 
 var escape_path = [] setget set_path
+var difficulty_modifier = 1
 var hit_points = 4
-var max_hp = 10
+var max_hp = 4
 var speed = 100
 var world_tilemap: TileMap
-var processed_steps = 0
 var enemy_type = 1
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+    max_hp = difficulty_modifier * max_hp
+    hit_points = max_hp
     update_hp_label()
     set_process(false)
 

@@ -4,6 +4,9 @@ export (PackedScene) var mob_scene: PackedScene
 
 var tower_scene: PackedScene = preload("res://scenes/towers/SimpleTower.tscn")
 
+const PREVIEW_TOWER_RECT: Rect2 = Rect2(50, 0, 50, 100)
+const PREVIEW_WALL_RECT: Rect2 = Rect2(0, -50, 50, 100)
+
 var field_structures = []
 var start_position = Vector2(3, 0)
 var end_position = Vector2(4, 14)
@@ -13,7 +16,8 @@ var target_building: String = ""
 var current_wave_counter: int = 0
 
 var score: int = 0
-var gold: int = 10
+var gold: int = 25
+var game_level: int = 1
 # var wood: int = 0
 # var steel: int = 0
 
@@ -102,6 +106,17 @@ func _on_mob_create_timer_timeout():
         current_wave_counter -= 1
         create_entity()
 
+func raise_game_level():
+    set_game_level(game_level + 1)
+
+func set_game_level(new_game_level: int):
+    game_level = new_game_level
+    update_score_label()
+
+func check_and_update_game_level():
+    if score / (5.0* (game_level*2)) > game_level:
+        raise_game_level()
+        pass
 
 # remove mobs when they reach the exit
 func _on_ExitArea_area_entered(area: Area2D):
@@ -110,12 +125,14 @@ func _on_ExitArea_area_entered(area: Area2D):
     update_score_label()
 
 func on_kill_mob():
-    gold += rand_range(1, 10)
-    score += 1
+    gold += rand_range(1, 2)
+    score += 1 * game_level
+    check_and_update_game_level()
     update_score_label()
 
 func create_entity():
     var next_mob = mob_scene.instance()
+    next_mob.difficulty_modifier = game_level
     $BattleField.add_child(next_mob)
     next_mob.position = main_tile_map.map_to_world(start_position) + main_tile_map.cell_size / 2
 
@@ -124,17 +141,18 @@ func create_entity():
     find_path(target_position, next_mob)
 
 func update_score_label():
-    $ScoreLabel.text = "Score: %d\nGold: %d" % [score, gold]
+    # @TODO separte these labels
+    $ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d" % [score, gold, game_level]
 
 
 func _on_BuildingMenu_tower_selected():
-    print_debug("tower selected")
     target_building = "tower"
+    update_building_preview(target_building)
 
 
 func _on_BuildingMenu_wall_selected():
-    print_debug("wall selected")
     target_building = "wall"
+    update_building_preview(target_building)
 
 
 func _on_BuildingMenu_close_menu():
@@ -171,6 +189,7 @@ func _on_BattleField_gui_input(event):
                     remove_construction(event.position - battleFieldRect.position)
 
                 target_building = ""
+                update_building_preview()
 
         if event.button_index == BUTTON_RIGHT:
             pass
@@ -178,6 +197,16 @@ func _on_BattleField_gui_input(event):
     elif event is InputEventMouseMotion:
         pass
 
-
 func _on_BuildingMenu_destroy_construction_selected():
     target_building = "DESTROY"
+
+func update_building_preview(building_target: String = ""):
+    var building_preview_sprite = $SelectionPreview/Button/Sprite
+    if building_target == "tower":
+        building_preview_sprite.set_region_rect(PREVIEW_TOWER_RECT)
+        building_preview_sprite.visible = true
+    elif building_target == "wall":
+        building_preview_sprite.set_region_rect(PREVIEW_WALL_RECT)
+        building_preview_sprite.visible = true
+    else:
+        building_preview_sprite.visible = false
