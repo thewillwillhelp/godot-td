@@ -19,7 +19,6 @@ func _ready():
 #    pass
 
 func shoot_enemy() -> void:
-    # print_debug("shot")
     if not bullet_scene:
         return
 
