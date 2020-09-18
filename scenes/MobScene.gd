@@ -2,25 +2,36 @@ extends Node2D
 
 var utils: GDScript = preload("res://utils/Utils.gd")
 
+"""
+lvl  entity_type  max_hp   speed
+ 1       1          8        50
+ 2       1          16       50
+
+ 1       2          3        90
+ 2       2          6        90
+"""
+
 signal was_killed
 
+# UI constants
 const HP_INDICATOR_MAX_WIDTH = 38
 
+# data object constants
+var entity_class = "Enemy"
+var entity_type = 1
 var escape_path = [] setget set_path
 var difficulty_modifier = 1
 var hit_points = 4
 var max_hp = 4
-var speed = 100
+var speed = 50
 var world_tilemap: TileMap
-var enemy_type = 1
 var came_from_map: Dictionary
 # target position in tilemap cells
 var target_position: Vector2
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-    max_hp = difficulty_modifier * max_hp
-    hit_points = max_hp
+    update_params_according_type()
     update_hp_label()
     set_process(false)
 
@@ -73,7 +84,10 @@ func _on_Area2D_area_shape_entered(area_id, area, area_shape, self_shape):
 
 
 func _on_Area2D_area_entered(area: Area2D) -> void:
-    if "bullet_type" in area:
+    if not "entity_class" in area:
+        return
+
+    if area.entity_class == "Bullet":
         # @TODO damage depends on bullet_type
         receive_damage(area)
         area.queue_free()
@@ -95,3 +109,14 @@ func update_path_line():
         path_line.push_back(step - position)
 
     $Line2D.points = path_line
+
+func update_params_according_type():
+    if entity_type == 1:
+        max_hp = 8
+        speed = 50
+    if entity_type == 2:
+        max_hp = 3
+        speed = 90
+
+    max_hp = difficulty_modifier * max_hp
+    hit_points = max_hp

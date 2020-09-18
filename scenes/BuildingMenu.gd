@@ -1,27 +1,19 @@
 extends Node2D
 
-signal wall_selected
-signal tower_selected
+signal building_target_was_selected
 signal close_menu
-signal destroy_construction_selected
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-    $StoneWallButton.connect("pressed", self, "emit_wall_selected")
-    $TowerButton.connect("pressed", self, "emit_tower_selected")
+    $StoneWallButton.connect("pressed", self, "emit_building_menu_selection", [ 1 ])
+    $TowerButton.connect("pressed", self, "emit_building_menu_selection", [ 2 ])
     $CloseButton.connect("pressed", self, "emit_close_menu")
-    $DestroyButton.connect("pressed", self, "emit_destroy_construction_selected")
-    pass # Replace with function body.
+    $DestroyButton.connect("pressed", self, "emit_building_menu_selection", [ 0 ])
+    $CannonTowerButton.connect("pressed", self, "emit_building_menu_selection", [ 3 ])
 
-func emit_wall_selected():
-    emit_signal("wall_selected")
-
-func emit_tower_selected():
-    emit_signal("tower_selected")
+func emit_building_menu_selection(construction_type):
+    emit_signal("building_target_was_selected", construction_type)
 
 func emit_close_menu():
     emit_signal("close_menu")
-
-func emit_destroy_construction_selected():
-    emit_signal("destroy_construction_selected")
 
