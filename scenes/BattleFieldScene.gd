@@ -32,7 +32,7 @@ var target_building: String = ""
 var current_wave_counter: int = 0
 
 var score: int = 0
-var gold: int = 2225
+var gold: int = 25
 var game_level: int = 1
 # var wood: int = 0
 # var steel: int = 0
