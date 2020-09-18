@@ -25,7 +25,7 @@ static func get_came_from_map(battlefield_data, current_position: Vector2, targe
         if next_position.distance_squared_to(target_position) == 0:
             break
 
-        var neighbors = find_free_neighbour(battlefield_data, next_position, 1)
+        var neighbors = find_free_neighbour(battlefield_data, next_position, "GRASS")
 
         for nei in neighbors:
             if not nei in came_from_map:
@@ -42,7 +42,7 @@ static func get_came_from_map(battlefield_data, current_position: Vector2, targe
 
     return came_from_map
 
-static func find_free_neighbour(battlefield_data, cell_position: Vector2, free_cell_type: int):
+static func find_free_neighbour(battlefield_data, cell_position: Vector2, free_cell_type: String):
     var free_neighbours = []
     for i in range(-1,2):
         for j in range(-1,2):
