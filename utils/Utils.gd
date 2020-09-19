@@ -44,17 +44,24 @@ static func get_came_from_map(battlefield_data, current_position: Vector2, targe
 
 static func find_free_neighbour(battlefield_data, cell_position: Vector2, free_cell_type: String):
     var free_neighbours = []
+    var max_y = len(battlefield_data)
+    var max_x = len(battlefield_data[0])
     for i in range(-1,2):
         for j in range(-1,2):
-            if i == cell_position.x and j == cell_position.y:
-                continue
-
             if abs(i) == abs(j):
                 continue
 
-            var cell_type = battlefield_data[cell_position.y + j][cell_position.x + i].type
+            var nei_position = cell_position + Vector2(i, j)
+            if nei_position.distance_squared_to(cell_position) == 0:
+                continue
+
+            if (nei_position.x < 0 or nei_position.x >= max_x or
+                nei_position.y < 0 or nei_position.y >= max_y):
+                continue
+
+            var cell_type = battlefield_data[nei_position.y][nei_position.x].type
             if free_cell_type == cell_type:
-                free_neighbours.push_back(Vector2(cell_position.x + i, cell_position.y + j))
+                free_neighbours.push_back(nei_position)
 
     return free_neighbours
 

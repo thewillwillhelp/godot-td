@@ -44,6 +44,12 @@ const CONSTRUCTION_TYPE_TOWER_BASEMENT = "TOWER BASEMENT"
 const CONSTRUCTION_TYPE_BALLISTA_TOWER = "BALLISTA TOWER"
 const CONSTRUCTION_TYPE_CANNON_TOWER = "CANNON TOWER"
 
+const CONSTRUCTION_TYPES_COSTS: Dictionary = {
+    "TOWER BASEMENT": 5,
+    "BALLISTA TOWER": 10,
+    "CANNON TOWER": 30
+}
+
 const CONSTRUCTION_TYPES_TILES: Dictionary = {
     "DESTROY": -1,
     "STONE WALL": 0,
@@ -53,11 +59,10 @@ const CONSTRUCTION_TYPES_TILES: Dictionary = {
     "CANNON TOWER": 6
 }
 
-
 var default_game_data: Dictionary = {
     "battlefield_data": [],
-    "start_position": Vector2(3, 0),
-    "end_position": Vector2(4, 14),
+    "start_position": self.get_random_border_position(), # Vector2(0, 1),
+    "end_position": self.get_random_border_position(), # Vector2(4, 14),
     "score": 0,
     "gold": 25,
     "game_level": 1
@@ -67,6 +72,7 @@ var game_data: Dictionary = default_game_data.duplicate()
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+    randomize()
     main_tile_map = $BattleField/MainTileMap
     background_tile_map = $BattleField/BackgroundTileMap
     if globals.game_should_be_loaded:
@@ -77,8 +83,12 @@ func _ready():
 func start_game(is_game_new: bool = true):
     if is_game_new:
         self.game_data = default_game_data.duplicate()
+        self.game_data.start_position = self.get_random_border_position()
+        self.game_data.end_position = self.get_random_border_position(self.game_data.start_position)
         self.game_data.battlefield_data = create_initial_battlefield(DEFAULT_BATTLEFIELD_COLUMNS_NUMBER, DEFAULT_BATTLEFIELD_ROWS_NUMBER)
-    # game_data.battlefield_data = []
+
+    $ExitArea.position = main_tile_map.map_to_world(self.game_data.end_position) + Vector2(25, 25)
+
     update_battle_field_view(self.game_data.battlefield_data)
     update_score_label()
 
@@ -99,36 +109,6 @@ func remove_construction(position):
 
     update_battle_field_view(battlefield_data)
 
-func on_try_build_construction(position, construction_type):
-    var tower_cost: int
-
-    if construction_type == CONSTRUCTION_TYPE_TOWER_BASEMENT:
-        tower_cost = 5
-    elif construction_type == CONSTRUCTION_TYPE_BALLISTA_TOWER:
-        tower_cost = 10
-    elif construction_type == CONSTRUCTION_TYPE_CANNON_TOWER:
-        tower_cost = 20
-
-    if self.game_data.gold < tower_cost:
-        return
-
-    var cell_position = main_tile_map.world_to_map(position)
-    if self.game_data.battlefield_data[cell_position.y][cell_position.x].type != CONSTRUCTION_TYPE_GRASS:
-        return
-
-    self.game_data.battlefield_data[cell_position.y][cell_position.x].type = construction_type
-    update_battle_field_view(self.game_data.battlefield_data)
-
-    self.game_data.gold -= tower_cost
-    update_score_label()
-
-func _on_mob_create_timer_timeout():
-    if current_wave_counter == 0:
-        $mob_create_timer.stop()
-    else:
-        current_wave_counter -= 1
-        create_entity()
-
 func raise_game_level():
     set_game_level(self.game_data.game_level + 1)
 
@@ -140,22 +120,6 @@ func check_and_update_game_level():
     if self.game_data.score / (5.0* (self.game_data.game_level*2)) > self.game_data.game_level:
         raise_game_level()
         pass
-
-# remove mobs when they reach the exit
-func _on_ExitArea_area_entered(area: Area2D) -> void:
-    if not "entity_class" in area:
-        return
-
-    if area.entity_class == "Enemy":
-        area.queue_free()
-        self.game_data.score -= 10
-        update_score_label()
-
-func on_kill_mob():
-    self.game_data.gold += rand_range(1, 2)
-    self.game_data.score += 1 * self.game_data.game_level
-    check_and_update_game_level()
-    update_score_label()
 
 func create_entity():
     var next_mob = mob_scene.instance()
@@ -182,54 +146,6 @@ func update_score_label():
     var game_level = self.game_data.game_level
     # @TODO separte these labels
     $ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d" % [score, gold, game_level]
-
-
-
-func _on_BuildingMenu_close_menu():
-    $BuildingMenu.hide()
-
-func _on_BuildingMenuButton_pressed():
-    if not $BuildingMenu.visible:
-        $BuildingMenu.show()
-    else:
-        $BuildingMenu.hide()
-    pass # Replace with function body.
-
-
-func _on_StartWaveButton_pressed():
-    if current_wave_counter > 0:
-        return
-
-    var mobs_for_level = self.game_data.game_level
-    if mobs_for_level > 20: mobs_for_level = 20
-    var bonus_mobs = (randi() % (self.game_data.game_level + 2)) % 10
-
-    current_wave_counter = mobs_for_level + bonus_mobs
-    $mob_create_timer.start()
-
-
-func _on_BattleField_gui_input(event):
-    if event is InputEventMouseButton:
-        var battleFieldRect = $BattleField.get_rect()
-        if event.button_index == BUTTON_LEFT:
-            if event.is_pressed():
-                if (not self.is_cell_available_for_building(event.position - battleFieldRect.position) and
-                    target_building != CONSTRUCTION_TYPE_DESTROY):
-                    return
-
-                if target_building == CONSTRUCTION_TYPE_DESTROY:
-                    self.remove_construction(event.position - battleFieldRect.position)
-                elif target_building != "":
-                    self.on_try_build_construction(event.position - battleFieldRect.position, target_building)
-
-                # target_building = ""
-                self.update_building_preview(target_building)
-
-        if event.button_index == BUTTON_RIGHT:
-            pass
-
-    elif event is InputEventMouseMotion:
-        pass
 
 func update_building_preview(building_target: String = ""):
     var building_preview_sprite = $SelectionPreview/Button/Sprite
@@ -318,7 +234,6 @@ func add_construction_to_battlefield(cell_position: Vector2, construction_type: 
         tower.queue_free()
         return
 
-
     tower.position = main_tile_map.map_to_world(cell_position) + Vector2(25, 25)
     tower.connect("tower_was_selected", self, "on_tower_selected")
     $BattleField.add_child(tower)
@@ -326,31 +241,6 @@ func add_construction_to_battlefield(cell_position: Vector2, construction_type: 
 
     self.game_data.battlefield_data[cell_position.y][cell_position.x].type = construction_type
     self.game_data.battlefield_data[cell_position.y][cell_position.x].construction = tower
-
-
-func _on_SelectionPreview_pressed():
-    target_building = ""
-    update_building_preview(target_building)
-
-func on_tower_selected(tower: Node2D):
-    if target_building == CONSTRUCTION_TYPE_DESTROY:
-        #tower.queue_free()
-        self.remove_construction(tower.position)
-    else:
-        tower.toggle_radius_visibility()
-
-
-# @TODO use same construction types in building menus as in battlefield scene
-func _on_BuildingMenu_building_target_was_selected(construction_type):
-    if construction_type == 0:
-        target_building = CONSTRUCTION_TYPE_DESTROY
-    elif construction_type == 1:
-        target_building = CONSTRUCTION_TYPE_TOWER_BASEMENT
-    elif construction_type == 2:
-        target_building = CONSTRUCTION_TYPE_BALLISTA_TOWER
-    elif construction_type == 3:
-        target_building = CONSTRUCTION_TYPE_CANNON_TOWER
-    update_building_preview(target_building)
 
 func reset_game():
     for battlefield_row in game_data.battlefield_data:
@@ -365,7 +255,6 @@ func reset_game():
     self.remove_all_enemies()
     self.start_game()
 
-
 func remove_all_enemies():
     for child in $BattleField.get_children():
         if ("entity_class" in child and
@@ -378,21 +267,9 @@ func save_game():
 
     # prepare data to save:
     var data_to_save = self.game_data.duplicate()
-    # data_to_save.start_position = self.serialize_vector(data_to_save.start_position)
-    # data_to_save.end_position = self.serialize_vector(data_to_save.start_position)
 
-    # file_to_save.store_line(to_json(data_to_save))
     file_to_save.store_var(data_to_save)
     file_to_save.close()
-
-func serialize_vector(vector: Vector2):
-    return to_json({
-        "x": vector.x,
-        "y": vector.y
-    })
-
-func deserialize_vector(serialized_vector: String):
-    pass
 
 func load_game():
     var file_to_load = File.new()
@@ -414,6 +291,35 @@ func load_game():
     self.game_data = loaded_game_data
     self.start_game(false)
 
+func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector2:
+    randomize()
+    var side: int = randi() % 4
+    var x: int = 0
+    var y: int = 0
+    if side == 0: # left
+        y = (randi() % (DEFAULT_BATTLEFIELD_ROWS_NUMBER - 2)) + 1
+    elif side == 1: # top
+        x = (randi() % (DEFAULT_BATTLEFIELD_COLUMNS_NUMBER - 2)) + 1
+    elif side == 2: # right
+        x = DEFAULT_BATTLEFIELD_COLUMNS_NUMBER - 1
+        y = (randi() % (DEFAULT_BATTLEFIELD_ROWS_NUMBER - 2)) + 1
+    elif side == 3: # bottom
+        y = DEFAULT_BATTLEFIELD_ROWS_NUMBER - 1
+        x = (randi() % (DEFAULT_BATTLEFIELD_COLUMNS_NUMBER - 2)) + 1
+
+    var result_position = Vector2(x, y)
+
+    if to_keep_distance.distance_squared_to(Vector2()) > 0:
+        if to_keep_distance.distance_squared_to(result_position) < 2:
+            return self.get_random_border_position(to_keep_distance)
+
+    return result_position
+
+
+
+#####
+# Listeners:
+#####
 func _on_SaveGameButton_pressed():
     self.save_game()
 
@@ -422,3 +328,110 @@ func _on_LoadGameButton_pressed():
 
 func _on_Reset_Game_pressed():
     self.reset_game()
+
+func _on_SelectionPreview_pressed():
+    target_building = ""
+    update_building_preview(target_building)
+
+func on_tower_selected(tower: Node2D):
+    if target_building == CONSTRUCTION_TYPE_DESTROY:
+        #tower.queue_free()
+        self.remove_construction(tower.position)
+    else:
+        tower.toggle_radius_visibility()
+
+# @TODO use same construction types in building menus as in battlefield scene
+func _on_BuildingMenu_building_target_was_selected(construction_type):
+    if construction_type == 0:
+        target_building = CONSTRUCTION_TYPE_DESTROY
+    elif construction_type == 1:
+        target_building = CONSTRUCTION_TYPE_TOWER_BASEMENT
+    elif construction_type == 2:
+        target_building = CONSTRUCTION_TYPE_BALLISTA_TOWER
+    elif construction_type == 3:
+        target_building = CONSTRUCTION_TYPE_CANNON_TOWER
+    update_building_preview(target_building)
+
+func _on_BuildingMenu_close_menu():
+    $BuildingMenu.hide()
+
+func _on_BuildingMenuButton_pressed():
+    if not $BuildingMenu.visible:
+        $BuildingMenu.show()
+    else:
+        $BuildingMenu.hide()
+    pass # Replace with function body.
+
+func _on_StartWaveButton_pressed():
+    if current_wave_counter > 0:
+        return
+
+    var mobs_for_level = self.game_data.game_level
+    if mobs_for_level > 20: mobs_for_level = 20
+    var bonus_mobs = (randi() % (self.game_data.game_level + 2)) % 10
+
+    current_wave_counter = mobs_for_level + bonus_mobs
+    $mob_create_timer.start()
+
+
+func _on_BattleField_gui_input(event):
+    if event is InputEventMouseButton:
+        var battleFieldRect = $BattleField.get_rect()
+        if event.button_index == BUTTON_LEFT:
+            if event.is_pressed():
+                if (not self.is_cell_available_for_building(event.position - battleFieldRect.position) and
+                    target_building != CONSTRUCTION_TYPE_DESTROY):
+                    return
+
+                if target_building == CONSTRUCTION_TYPE_DESTROY:
+                    self.remove_construction(event.position - battleFieldRect.position)
+                elif target_building != "":
+                    self.on_try_build_construction(event.position - battleFieldRect.position, target_building)
+
+                # target_building = ""
+                self.update_building_preview(target_building)
+
+        if event.button_index == BUTTON_RIGHT:
+            pass
+
+    elif event is InputEventMouseMotion:
+        pass
+
+# remove mobs when they reach the exit
+func _on_ExitArea_area_entered(area: Area2D) -> void:
+    if not "entity_class" in area:
+        return
+
+    if area.entity_class == "Enemy":
+        area.queue_free()
+        self.game_data.score -= 10
+        update_score_label()
+
+func on_kill_mob():
+    self.game_data.gold += randi() % 2 + 1
+    self.game_data.score += 1 * self.game_data.game_level
+    check_and_update_game_level()
+    update_score_label()
+
+func on_try_build_construction(position, construction_type):
+    var tower_cost: int = CONSTRUCTION_TYPES_COSTS[construction_type]
+
+    if self.game_data.gold < tower_cost:
+        return
+
+    var cell_position = main_tile_map.world_to_map(position)
+    if self.game_data.battlefield_data[cell_position.y][cell_position.x].type != CONSTRUCTION_TYPE_GRASS:
+        return
+
+    self.game_data.battlefield_data[cell_position.y][cell_position.x].type = construction_type
+    update_battle_field_view(self.game_data.battlefield_data)
+
+    self.game_data.gold -= tower_cost
+    update_score_label()
+
+func _on_mob_create_timer_timeout():
+    if current_wave_counter == 0:
+        $mob_create_timer.stop()
+    else:
+        current_wave_counter -= 1
+        create_entity()

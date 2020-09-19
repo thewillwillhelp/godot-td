@@ -1,5 +1,8 @@
 extends Node2D
 
+var ballista_bullet_texture = preload("res://assets/images/bullets/simple_bullet.png")
+var cannon_bullet_texture = preload("res://assets/images/bullets/simple_bullet_dark_blue_with_blink.png")
+
 var entity_class: String = "Bullet"
 var entity_type: int = 1
 var target: Vector2 setget set_target
@@ -17,11 +20,13 @@ func _ready():
         self.min_damage = 1
         self.max_damage = 5
         self.speed = 250
+        $Sprite.texture = ballista_bullet_texture
     elif entity_type == 2:
         self.min_damage = 5
         self.max_damage = 15
         self.speed = 175
         self.max_affected_targets = 5
+        $Sprite.texture = cannon_bullet_texture
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):

@@ -55,10 +55,20 @@ __meta__ = {
 }
 
 [node name="ExitArea" type="Area2D" parent="."]
+position = Vector2( 225, 725 )
 
 [node name="ExitCollisionShape" type="CollisionShape2D" parent="ExitArea"]
-position = Vector2( 225, 725 )
 shape = SubResource( 1 )
+
+[node name="ColorRect" type="ColorRect" parent="ExitArea"]
+margin_left = -20.0
+margin_top = -20.0
+margin_right = 20.0
+margin_bottom = 20.0
+color = Color( 0.0705882, 0.0470588, 0.47451, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="ScoreLabel" type="Label" parent="."]
 margin_left = 14.0
@@ -154,10 +164,10 @@ __meta__ = {
 
 [node name="Reset Game" type="Button" parent="."]
 visible = false
-margin_left = 395.0
-margin_top = 102.0
-margin_right = 498.0
-margin_bottom = 142.0
+margin_left = 50.0
+margin_top = 100.0
+margin_right = 153.0
+margin_bottom = 140.0
 rect_rotation = 90.0
 custom_fonts/font = ExtResource( 2 )
 text = "Reset game"
