@@ -67,29 +67,28 @@ func update_hp_label():
     life_indicator.rect_size.x = hp_indicator_width
 
 func receive_damage(bullet: Area2D):
+    if not bullet.is_active():
+        return
+
     var damage_range = bullet.max_damage - bullet.min_damage
     var damage = bullet.min_damage + randi() % damage_range
     hit_points = hit_points - damage
 
-    update_hp_label()
+    bullet.affected_targets += 1
+
+    self.update_hp_label()
     # @TODO add some animation
 
     if hit_points <= 0:
-        emit_signal("was_killed")
-        queue_free()
-
-func _on_Area2D_area_shape_entered(area_id, area, area_shape, self_shape):
-    # print_debug("Collision, area_shape_entered")
-    pass # Replace with function body.
-
+        self.emit_signal("was_killed")
+        self.queue_free()
 
 func _on_Area2D_area_entered(area: Area2D) -> void:
     if not "entity_class" in area:
         return
 
     if area.entity_class == "Bullet":
-        # @TODO damage depends on bullet_type
-        receive_damage(area)
+        self.receive_damage(area)
         area.queue_free()
 
 func on_battlefield_data_changed(updated_battlefield_data) -> void:
