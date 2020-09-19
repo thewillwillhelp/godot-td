@@ -112,8 +112,10 @@ func on_try_build_construction(position, construction_type):
     if self.game_data.gold < tower_cost:
         return
 
-    # add_construction(main_tile_map.world_to_map(position), construction_name)
     var cell_position = main_tile_map.world_to_map(position)
+    if self.game_data.battlefield_data[cell_position.y][cell_position.x].type != CONSTRUCTION_TYPE_GRASS:
+        return
+
     self.game_data.battlefield_data[cell_position.y][cell_position.x].type = construction_type
     update_battle_field_view(self.game_data.battlefield_data)
 
