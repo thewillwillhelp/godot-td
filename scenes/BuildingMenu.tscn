@@ -80,7 +80,7 @@ margin_left = 10.0
 margin_top = 60.0
 margin_right = 36.0
 margin_bottom = 74.0
-text = "20G"
+text = "30G"
 __meta__ = {
 "_edit_use_anchors_": false
 }
