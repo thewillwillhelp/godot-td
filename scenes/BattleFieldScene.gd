@@ -52,7 +52,7 @@ const CONSTRUCTION_TYPES_COSTS: Dictionary = {
 
 const CONSTRUCTION_TYPES_TILES: Dictionary = {
     "DESTROY": -1,
-    "STONE WALL": 0,
+    "STONE WALL": 8,
     "GRASS": 1,
     "TOWER BASEMENT": 4,
     "BALLISTA TOWER":  5,
