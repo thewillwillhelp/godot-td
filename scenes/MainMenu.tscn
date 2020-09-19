@@ -90,4 +90,5 @@ margin_bottom = 152.0
 custom_fonts/font = SubResource( 2 )
 text = "Exit"
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/NewFreeGameButton" to="." method="_on_NewFreeGameButton_pressed"]
+[connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/LoadFreeGameButton" to="." method="_on_LoadFreeGameButton_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/ExitButton" to="." method="_on_ExitButton_pressed"]

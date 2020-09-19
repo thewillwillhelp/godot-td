@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://assets/images/SpriteSet.png" type="Texture" id=1]
-[ext_resource path="res://assets/images/destroy-construction.png" type="Texture" id=2]
+[ext_resource path="res://assets/images/destroy-construction-v2.png" type="Texture" id=2]
 [ext_resource path="res://scenes/BuildingMenu.gd" type="Script" id=3]
 
 [node name="BuildingMenu" type="Node2D"]
