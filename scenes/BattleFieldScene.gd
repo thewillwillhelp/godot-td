@@ -8,6 +8,7 @@ var icon_destroy_construction = preload("res://assets/images/destroy-constructio
 var icons_sprite_set = preload("res://assets/images/SpriteSet.png")
 
 const PREVIEW_TOWER_RECT: Rect2 = Rect2(50, 0, 50, 100)
+const PREVIEW_CANNON_TOWER_RECT: Rect2 = Rect2(100, 0, 50, 100)
 const PREVIEW_WALL_RECT: Rect2 = Rect2(0, -50, 50, 100)
 const PREVIEW_DESTROY_CONSTRUCTION_RECT: Rect2 = Rect2(0, -100, 100, 200)
 
@@ -23,7 +24,6 @@ signal battlefield_data_updated
 # mainTileMap should reflect this data:
 var battlefield_data = []
 
-var field_structures = []
 var start_position = Vector2(3, 0)
 var end_position = Vector2(4, 14)
 var main_tile_map: TileMap
@@ -53,15 +53,44 @@ func start_new_game():
 #    pass
 
 func add_construction(position, construction_name):
-    var construction_tile = main_tile_map.get_tileset().find_tile_by_name(construction_name)
     var cell_position = main_tile_map.world_to_map(position)
+
+    if "construction" in battlefield_data[cell_position.y][cell_position.x]:
+        return
+
+    if battlefield_data[cell_position.y][cell_position.x].type == 0:
+        return
+
+    var tile_name: String
+
+    var tower: Node2D
+    if construction_name == "tower-basement":
+        tile_name = "tower-basement"
+        tower = tower_scene.instance()
+        tower.entity_type = 1
+    elif construction_name == "tower":
+        tile_name = "ballista-tower"
+        tower = tower_scene.instance()
+        tower.entity_type = 2
+    elif construction_name == "cannon_tower":
+        tile_name = "cannon-tower"
+        tower = tower_scene.instance()
+        tower.entity_type = 3
+    else:
+        return
+
+    tower.position = main_tile_map.map_to_world(cell_position) + Vector2(25, 25)
+    tower.connect("tower_was_selected", self, "on_tower_selected")
+    $BattleField.add_child(tower)
+    tower.battle_field = $BattleField
+
+    var construction_tile_index = main_tile_map.get_tileset().find_tile_by_name(tile_name)
 
     var unwalkable_grass_tile = background_tile_map.get_tileset().find_tile_by_name("grass_non_walkable")
     background_tile_map.set_cellv(cell_position, unwalkable_grass_tile)
 
-    remove_hidden_structures(cell_position)
-
-    battlefield_data[cell_position.y][cell_position.x].type = construction_tile
+    battlefield_data[cell_position.y][cell_position.x].type = construction_tile_index
+    battlefield_data[cell_position.y][cell_position.x].construction = tower
     update_battle_field_view(battlefield_data)
 
 func remove_construction(position):
@@ -70,45 +99,34 @@ func remove_construction(position):
     main_tile_map.set_cellv(cell_position, construction_tile)
 
     battlefield_data[cell_position.y][cell_position.x].type = 1
-    update_battle_field_view(battlefield_data)
-    remove_hidden_structures(cell_position)
+    if "construction" in battlefield_data[cell_position.y][cell_position.x]:
+        battlefield_data[cell_position.y][cell_position.x].construction.queue_free()
+        battlefield_data[cell_position.y][cell_position.x].erase("construction")
 
-func add_stone_wall(position):
+    update_battle_field_view(battlefield_data)
+
+func add_tower_basement(position):
     if gold < 5:
         return
     add_construction(position, "tower-basement")
     gold -= 5
     update_score_label()
 
-func add_tower(position):
-    if gold < 10:
+func add_tower(position, construction_name):
+    var tower_cost: int
+
+    if construction_name == "tower":
+        tower_cost = 10
+    elif construction_name == "cannon_tower":
+        tower_cost = 20
+
+    if self.gold < tower_cost:
         return
 
-    add_construction(position, "ballista-tower")
+    add_construction(position, construction_name)
 
-    var tower = tower_scene.instance()
-    tower.position = position
-    $BattleField.add_child(tower)
-    tower.battle_field = $BattleField
-    var position_in_tilemap = main_tile_map.world_to_map(position)
-    field_structures.push_back({ 'tower': tower, 'position': position_in_tilemap })
-
-    gold -= 10
+    gold -= tower_cost
     update_score_label()
-
-func remove_hidden_structures(position: Vector2):
-    var index_of_hidden_structer_by_position: int
-    var should_remove_hidden_structure: bool = false
-
-    for index in field_structures.size():
-        if position.distance_squared_to(field_structures[index].position) == 0:
-            index_of_hidden_structer_by_position = index
-            should_remove_hidden_structure = true
-            break
-
-    if should_remove_hidden_structure:
-        $BattleField.remove_child(field_structures[index_of_hidden_structer_by_position].tower)
-        field_structures.remove(index_of_hidden_structer_by_position)
 
 func _on_mob_create_timer_timeout():
     if current_wave_counter == 0:
@@ -130,10 +148,14 @@ func check_and_update_game_level():
         pass
 
 # remove mobs when they reach the exit
-func _on_ExitArea_area_entered(area: Area2D):
-    area.get_parent().queue_free()
-    score -= 10
-    update_score_label()
+func _on_ExitArea_area_entered(area: Area2D) -> void:
+    if not "entity_class" in area:
+        return
+
+    if area.entity_class == "Enemy":
+        area.queue_free()
+        score -= 10
+        update_score_label()
 
 func on_kill_mob():
     gold += rand_range(1, 2)
@@ -143,7 +165,13 @@ func on_kill_mob():
 
 func create_entity():
     var next_mob = mob_scene.instance()
+    next_mob.entity_type = 1
+    if game_level > 5:
+        if randi() % 100 > (100 - game_level):
+            next_mob.entity_type = 2
+
     next_mob.difficulty_modifier = game_level
+
     $BattleField.add_child(next_mob)
     next_mob.position = main_tile_map.map_to_world(start_position) + main_tile_map.cell_size / 2
 
@@ -158,15 +186,6 @@ func update_score_label():
     # @TODO separte these labels
     $ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d" % [score, gold, game_level]
 
-
-func _on_BuildingMenu_tower_selected():
-    target_building = "tower"
-    update_building_preview(target_building)
-
-
-func _on_BuildingMenu_wall_selected():
-    target_building = "wall"
-    update_building_preview(target_building)
 
 
 func _on_BuildingMenu_close_menu():
@@ -202,9 +221,9 @@ func _on_BattleField_gui_input(event):
                     return
 
                 if target_building == "wall":
-                    add_stone_wall(event.position - battleFieldRect.position)
-                elif target_building == "tower":
-                    add_tower(event.position - battleFieldRect.position)
+                    add_tower_basement(event.position - battleFieldRect.position)
+                elif target_building == "tower" or target_building == "cannon_tower":
+                    add_tower(event.position - battleFieldRect.position, target_building)
                 elif target_building == "DESTROY":
                     remove_construction(event.position - battleFieldRect.position)
 
@@ -217,16 +236,15 @@ func _on_BattleField_gui_input(event):
     elif event is InputEventMouseMotion:
         pass
 
-func _on_BuildingMenu_destroy_construction_selected():
-    target_building = "DESTROY"
-    update_building_preview(target_building)
-
 func update_building_preview(building_target: String = ""):
     var building_preview_sprite = $SelectionPreview/Button/Sprite
     building_preview_sprite.set_scale(Vector2(2, 2))
     building_preview_sprite.texture = icons_sprite_set
     if building_target == "tower":
         building_preview_sprite.set_region_rect(PREVIEW_TOWER_RECT)
+        building_preview_sprite.visible = true
+    elif building_target == "cannon_tower":
+        building_preview_sprite.set_region_rect(PREVIEW_CANNON_TOWER_RECT)
         building_preview_sprite.visible = true
     elif building_target == "wall":
         building_preview_sprite.set_region_rect(PREVIEW_WALL_RECT)
@@ -278,3 +296,23 @@ func update_battle_field_view(battlefield_data):
 func _on_SelectionPreview_pressed():
     target_building = ""
     update_building_preview(target_building)
+
+func on_tower_selected(tower: Node2D):
+    if target_building == "DESTROY":
+        #tower.queue_free()
+        self.remove_construction(tower.position)
+    else:
+        tower.toggle_radius_visibility()
+
+
+func _on_BuildingMenu_building_target_was_selected(construction_type):
+    if construction_type == 0:
+        target_building = "DESTROY"
+    elif construction_type == 1:
+        target_building = "wall"
+    elif construction_type == 2:
+        target_building = "tower"
+    elif construction_type == 3:
+        target_building = "cannon_tower"
+    update_building_preview(target_building)
+

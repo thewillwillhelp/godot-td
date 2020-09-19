@@ -1,19 +1,28 @@
 extends Node2D
 
-var bullet_type: String = "simple_bullet"
+var entity_class: String = "Bullet"
+var entity_type: int = 1
 var target: Vector2 setget set_target
 var speed: int = 200
 var min_damage: int = 1
-var max_damage: int = 10
+var max_damage: int = 5
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
     set_process(false)
-    pass # Replace with function body.
+
+    if entity_type == 1:
+        self.min_damage = 1
+        self.max_damage = 5
+        self.speed = 250
+    elif entity_type == 2:
+        self.min_damage = 5
+        self.max_damage = 15
+        self.speed = 175
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
     move_to_target(delta * speed)
-    pass
 
 func move_to_target(step_size):
     var distance_to_next = position.distance_to(target)
