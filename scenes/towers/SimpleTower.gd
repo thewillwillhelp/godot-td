@@ -83,7 +83,7 @@ func get_target_mob():
 func _on_Control_gui_input(event: InputEvent):
     if event is InputEventMouseButton:
         if event.button_index == BUTTON_LEFT:
-            if event.is_pressed():
+            if not event.is_pressed():
                 self.emit_signal("tower_was_selected", self)
 
 
