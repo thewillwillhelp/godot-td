@@ -15,7 +15,7 @@ const PREVIEW_DESTROY_CONSTRUCTION_RECT: Rect2 = Rect2(0, -100, 100, 200)
 const BUILDING_AREA_ALLOWED_TOP_LEFT = Vector2(1, 1)
 const BUILDING_AREA_ALLOWED_BOTTOM_RIGHT = Vector2(6, 13)
 const DEFAULT_BATTLEFIELD_ROWS_NUMBER = 15
-const DEFAULT_BATTLEFIELD_COLUMNS_NUMBER = 8
+const DEFAULT_BATTLEFIELD_COLUMNS_NUMBER = 10
 const GRASS_TILE_INDEX = 1
 const STONE_WALL_TILE_INDEX = 0
 
@@ -61,9 +61,11 @@ const CONSTRUCTION_TYPES_TILES: Dictionary = {
 
 var default_game_data: Dictionary = {
     "battlefield_data": [],
-    "start_position": self.get_random_border_position(), # Vector2(0, 1),
-    "end_position": self.get_random_border_position(), # Vector2(4, 14),
+    "start_position": Vector2(), # Vector2(0, 1),
+    "end_position": Vector2(), # Vector2(4, 14),
     "score": 0,
+    "field_width": DEFAULT_BATTLEFIELD_COLUMNS_NUMBER,
+    "field_height": DEFAULT_BATTLEFIELD_ROWS_NUMBER,
     "gold": 25,
     "game_level": 1
 }
@@ -73,8 +75,12 @@ var game_data: Dictionary = default_game_data.duplicate()
 # Called when the node enters the scene tree for the first time.
 func _ready():
     randomize()
+    var center_position = Vector2($BattleField.rect_size.x / 2, $BattleField.rect_size.y / 2)
+    $Camera2D.position = center_position
     main_tile_map = $BattleField/MainTileMap
     background_tile_map = $BattleField/BackgroundTileMap
+    # $SwipeDetector.connect("screen_click", self, "_on_BattleField_gui_input")
+
     if globals.game_should_be_loaded:
         self.load_game()
     else:
@@ -85,11 +91,13 @@ func start_game(is_game_new: bool = true):
         self.game_data = default_game_data.duplicate()
         self.game_data.start_position = self.get_random_border_position()
         self.game_data.end_position = self.get_random_border_position(self.game_data.start_position)
-        self.game_data.battlefield_data = create_initial_battlefield(DEFAULT_BATTLEFIELD_COLUMNS_NUMBER, DEFAULT_BATTLEFIELD_ROWS_NUMBER)
+        self.game_data.battlefield_data = create_initial_battlefield(self.game_data.field_width, self.game_data.field_height)
 
+    main_tile_map.clear()
     $ExitArea.position = main_tile_map.map_to_world(self.game_data.end_position) + Vector2(25, 25)
 
     update_battle_field_view(self.game_data.battlefield_data)
+    $BattleField.rect_size = Vector2(self.game_data.field_width * 50, self.game_data.field_height * 50)
     update_score_label()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -145,10 +153,10 @@ func update_score_label():
     var gold = self.game_data.gold
     var game_level = self.game_data.game_level
     # @TODO separte these labels
-    $ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d" % [score, gold, game_level]
+    $GUI/ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d" % [score, gold, game_level]
 
 func update_building_preview(building_target: String = ""):
-    var building_preview_sprite = $SelectionPreview/Button/Sprite
+    var building_preview_sprite = $GUI/SelectionPreview/Button/Sprite
     building_preview_sprite.set_scale(Vector2(2, 2))
     building_preview_sprite.texture = icons_sprite_set
     if building_target == CONSTRUCTION_TYPE_BALLISTA_TOWER:
@@ -297,15 +305,15 @@ func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector
     var x: int = 0
     var y: int = 0
     if side == 0: # left
-        y = (randi() % (DEFAULT_BATTLEFIELD_ROWS_NUMBER - 2)) + 1
+        y = (randi() % (self.game_data.field_height - 2)) + 1
     elif side == 1: # top
-        x = (randi() % (DEFAULT_BATTLEFIELD_COLUMNS_NUMBER - 2)) + 1
+        x = (randi() % (self.game_data.field_width - 2)) + 1
     elif side == 2: # right
-        x = DEFAULT_BATTLEFIELD_COLUMNS_NUMBER - 1
-        y = (randi() % (DEFAULT_BATTLEFIELD_ROWS_NUMBER - 2)) + 1
+        x = self.game_data.field_width - 1
+        y = (randi() % (self.game_data.field_width - 2)) + 1
     elif side == 3: # bottom
-        y = DEFAULT_BATTLEFIELD_ROWS_NUMBER - 1
-        x = (randi() % (DEFAULT_BATTLEFIELD_COLUMNS_NUMBER - 2)) + 1
+        y = self.game_data.field_height - 1
+        x = (randi() % (self.game_data.field_width - 2)) + 1
 
     var result_position = Vector2(x, y)
 
@@ -320,28 +328,46 @@ func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector
 #####
 # Listeners:
 #####
-func _on_SaveGameButton_pressed():
+func _on_gui_command(command_type: String) -> void:
+    if command_type == "save_game_clicked":
+        self._on_SaveGameButton_pressed()
+    elif command_type == "exit_game_clicked":
+        self._on_exit_game()
+    elif command_type == "load_game_clicked":
+        self._on_LoadGameButton_pressed()
+    elif command_type == "reset_game_clicked":
+        self._on_Reset_Game_pressed()
+    elif command_type == "selection_preview_clicked":
+        self._on_SelectionPreview_pressed()
+    elif command_type == "start_wave_clicked":
+        self._on_StartWaveButton_pressed()
+
+func _on_exit_game() -> void:
+    get_tree().change_scene("res://scenes/MainMenu.tscn")
+
+func _on_SaveGameButton_pressed() -> void:
     self.save_game()
 
-func _on_LoadGameButton_pressed():
+func _on_LoadGameButton_pressed() -> void:
     self.load_game()
 
-func _on_Reset_Game_pressed():
+func _on_Reset_Game_pressed() -> void:
     self.reset_game()
 
-func _on_SelectionPreview_pressed():
+func _on_SelectionPreview_pressed() -> void:
     target_building = ""
     update_building_preview(target_building)
 
-func on_tower_selected(tower: Node2D):
+func on_tower_selected(tower: Node2D) -> void:
     if target_building == CONSTRUCTION_TYPE_DESTROY:
-        #tower.queue_free()
+        if $SwipeDetector.swipe_is_started:
+            return
         self.remove_construction(tower.position)
     else:
         tower.toggle_radius_visibility()
 
 # @TODO use same construction types in building menus as in battlefield scene
-func _on_BuildingMenu_building_target_was_selected(construction_type):
+func _on_BuildingMenu_building_target_selected(construction_type):
     if construction_type == 0:
         target_building = CONSTRUCTION_TYPE_DESTROY
     elif construction_type == 1:
@@ -351,16 +377,6 @@ func _on_BuildingMenu_building_target_was_selected(construction_type):
     elif construction_type == 3:
         target_building = CONSTRUCTION_TYPE_CANNON_TOWER
     update_building_preview(target_building)
-
-func _on_BuildingMenu_close_menu():
-    $BuildingMenu.hide()
-
-func _on_BuildingMenuButton_pressed():
-    if not $BuildingMenu.visible:
-        $BuildingMenu.show()
-    else:
-        $BuildingMenu.hide()
-    pass # Replace with function body.
 
 func _on_StartWaveButton_pressed():
     if current_wave_counter > 0:
@@ -374,19 +390,26 @@ func _on_StartWaveButton_pressed():
     $mob_create_timer.start()
 
 
-func _on_BattleField_gui_input(event):
+func _on_BattleField_gui_input(event: InputEvent):
+    if $SwipeDetector.swipe_is_started:
+        return
+
     if event is InputEventMouseButton:
         var battleFieldRect = $BattleField.get_rect()
         if event.button_index == BUTTON_LEFT:
-            if event.is_pressed():
-                if (not self.is_cell_available_for_building(event.position - battleFieldRect.position) and
+            if not event.is_pressed():
+
+                if target_building == "":
+                    return
+
+                if (not self.is_cell_available_for_building(event.position) and
                     target_building != CONSTRUCTION_TYPE_DESTROY):
                     return
 
                 if target_building == CONSTRUCTION_TYPE_DESTROY:
-                    self.remove_construction(event.position - battleFieldRect.position)
-                elif target_building != "":
-                    self.on_try_build_construction(event.position - battleFieldRect.position, target_building)
+                    self.remove_construction(event.position)
+                else:
+                    self.on_try_build_construction(event.position, target_building)
 
                 # target_building = ""
                 self.update_building_preview(target_building)
@@ -435,3 +458,7 @@ func _on_mob_create_timer_timeout():
     else:
         current_wave_counter -= 1
         create_entity()
+
+
+func _on_Node_swipe_is_happened(position: Vector2):
+    $Camera2D.position -= position

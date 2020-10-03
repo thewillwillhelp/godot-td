@@ -1,15 +1,10 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://scenes/BattleFieldScene.gd" type="Script" id=1]
-[ext_resource path="res://assets/fonts/dynamic_bebas.tres" type="DynamicFont" id=2]
+[ext_resource path="res://scenes/Battle_GUI.tscn" type="PackedScene" id=2]
 [ext_resource path="res://scenes/tileset_from_scene.tres" type="TileSet" id=3]
 [ext_resource path="res://scenes/MobScene.tscn" type="PackedScene" id=4]
-[ext_resource path="res://scenes/BuildingMenu.tscn" type="PackedScene" id=5]
-[ext_resource path="res://assets/images/target.png" type="Texture" id=6]
-[ext_resource path="res://assets/images/SpriteSet.png" type="Texture" id=7]
-[ext_resource path="res://assets/images/play-button.png" type="Texture" id=8]
-[ext_resource path="res://assets/images/construct-button.png" type="Texture" id=9]
-[ext_resource path="res://assets/images/save-button.png" type="Texture" id=10]
+[ext_resource path="res://scenes/swipe_detector.gd" type="Script" id=11]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 25, 25 )
@@ -19,9 +14,17 @@ script = ExtResource( 1 )
 mob_scene = ExtResource( 4 )
 
 [node name="GlobalBackground" type="ColorRect" parent="."]
+visible = false
 margin_right = 400.0
 margin_bottom = 720.0
 color = Color( 0.407843, 0.423529, 0.427451, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2( 100, 0 )
+current = true
 
 [node name="BattleField" type="ColorRect" parent="."]
 margin_right = 400.0
@@ -70,148 +73,28 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ScoreLabel" type="Label" parent="."]
-margin_left = 14.0
-margin_top = 2.0
-margin_right = 79.0
-margin_bottom = 53.0
-custom_fonts/font = ExtResource( 2 )
-text = "Score: 0
-Gold: 0
-Level: 0"
+[node name="SwipeDetector" type="Node" parent="."]
+script = ExtResource( 11 )
+
+[node name="Timer" type="Timer" parent="SwipeDetector"]
+wait_time = 0.025
+one_shot = true
+
+[node name="GUI" parent="." instance=ExtResource( 2 )]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="ParallaxBackground"]
+margin_right = 400.0
+margin_bottom = 750.0
+color = Color( 0.607843, 0.0156863, 0.0156863, 0.588235 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
-
-[node name="BuildingMenu" parent="." instance=ExtResource( 5 )]
-visible = false
-position = Vector2( 0, 510 )
-
-[node name="BuildingMenuButton" type="TextureButton" parent="."]
-margin_left = 350.0
-margin_top = 150.0
-margin_right = 450.0
-margin_bottom = 250.0
-rect_scale = Vector2( 0.5, 0.5 )
-texture_normal = ExtResource( 9 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="ColorRect" type="ColorRect" parent="BuildingMenuButton"]
-show_behind_parent = true
-margin_left = -1.0
-margin_top = -1.0
-margin_right = 101.0
-margin_bottom = 101.0
-mouse_filter = 2
-color = Color( 0, 0, 0, 0.611765 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="StartWaveButton" type="TextureButton" parent="."]
-margin_left = 350.0
-margin_top = 250.0
-margin_right = 450.0
-margin_bottom = 350.0
-rect_scale = Vector2( 0.5, 0.5 )
-texture_normal = ExtResource( 8 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="ColorRect" type="ColorRect" parent="StartWaveButton"]
-show_behind_parent = true
-margin_left = -1.0
-margin_top = -1.0
-margin_right = 101.0
-margin_bottom = 101.0
-mouse_filter = 2
-color = Color( 0, 0, 0, 0.611765 )
-
-[node name="SaveGameButton" type="TextureButton" parent="."]
-margin_left = 250.0
-margin_right = 350.0
-margin_bottom = 100.0
-rect_scale = Vector2( 0.5, 0.5 )
-texture_normal = ExtResource( 10 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="ColorRect" type="ColorRect" parent="SaveGameButton"]
-show_behind_parent = true
-margin_left = -1.0
-margin_top = -1.0
-margin_right = 101.0
-margin_bottom = 101.0
-mouse_filter = 2
-color = Color( 0, 0, 0, 0.611765 )
-
-[node name="LoadGameButton" type="Button" parent="."]
-visible = false
-margin_left = 10.0
-margin_top = 300.0
-margin_right = 110.0
-margin_bottom = 340.0
-rect_rotation = -90.0
-custom_fonts/font = ExtResource( 2 )
-text = "Load game"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Reset Game" type="Button" parent="."]
-visible = false
-margin_left = 50.0
-margin_top = 100.0
-margin_right = 153.0
-margin_bottom = 140.0
-rect_rotation = 90.0
-custom_fonts/font = ExtResource( 2 )
-text = "Reset game"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="SelectionPreview" type="Node2D" parent="."]
-position = Vector2( 350, 49 )
-
-[node name="ColorRect" type="ColorRect" parent="SelectionPreview"]
-margin_left = -1.0
-margin_top = -1.0
-margin_right = 51.0
-margin_bottom = 51.0
-color = Color( 0.239216, 0.317647, 0.619608, 0.403922 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Button" type="TextureButton" parent="SelectionPreview"]
-margin_right = 100.0
-margin_bottom = 100.0
-rect_scale = Vector2( 0.5, 0.5 )
-texture_normal = ExtResource( 6 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Sprite" type="Sprite" parent="SelectionPreview/Button"]
-visible = false
-position = Vector2( 50, 0 )
-scale = Vector2( 2, 2 )
-texture = ExtResource( 7 )
-region_enabled = true
-region_rect = Rect2( 50, 0, 50, 100 )
 [connection signal="gui_input" from="BattleField" to="." method="_on_BattleField_gui_input"]
 [connection signal="timeout" from="mob_create_timer" to="." method="_on_mob_create_timer_timeout"]
 [connection signal="area_entered" from="ExitArea" to="." method="_on_ExitArea_area_entered"]
-[connection signal="building_target_was_selected" from="BuildingMenu" to="." method="_on_BuildingMenu_building_target_was_selected"]
-[connection signal="close_menu" from="BuildingMenu" to="." method="_on_BuildingMenu_close_menu"]
-[connection signal="pressed" from="BuildingMenuButton" to="." method="_on_BuildingMenuButton_pressed"]
-[connection signal="pressed" from="StartWaveButton" to="." method="_on_StartWaveButton_pressed"]
-[connection signal="pressed" from="SaveGameButton" to="." method="_on_SaveGameButton_pressed"]
-[connection signal="pressed" from="LoadGameButton" to="." method="_on_LoadGameButton_pressed"]
-[connection signal="pressed" from="Reset Game" to="." method="_on_Reset_Game_pressed"]
-[connection signal="pressed" from="SelectionPreview/Button" to="." method="_on_SelectionPreview_pressed"]
+[connection signal="swipe_is_happened" from="SwipeDetector" to="." method="_on_Node_swipe_is_happened"]
+[connection signal="timeout" from="SwipeDetector/Timer" to="SwipeDetector" method="_on_Timer_timeout"]
+[connection signal="building_target_selected" from="GUI" to="." method="_on_BuildingMenu_building_target_selected"]
+[connection signal="command_send" from="GUI" to="." method="_on_gui_command"]
