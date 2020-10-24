@@ -79,7 +79,6 @@ func _ready():
     $Camera2D.position = center_position
     main_tile_map = $BattleField/MainTileMap
     background_tile_map = $BattleField/BackgroundTileMap
-    # $SwipeDetector.connect("screen_click", self, "_on_BattleField_gui_input")
 
     if globals.game_should_be_loaded:
         self.load_game()
@@ -360,7 +359,7 @@ func _on_SelectionPreview_pressed() -> void:
 
 func on_tower_selected(tower: Node2D) -> void:
     if target_building == CONSTRUCTION_TYPE_DESTROY:
-        if $SwipeDetector.swipe_is_started:
+        if $SwipeDetector.is_screen_moved():
             return
         self.remove_construction(tower.position)
     else:
@@ -391,12 +390,12 @@ func _on_StartWaveButton_pressed():
 
 
 func _on_BattleField_gui_input(event: InputEvent):
-    if $SwipeDetector.swipe_is_started:
-        return
-
     if event is InputEventMouseButton:
         var battleFieldRect = $BattleField.get_rect()
         if event.button_index == BUTTON_LEFT:
+            if $SwipeDetector.is_screen_moved():
+                return
+
             if not event.is_pressed():
 
                 if target_building == "":

@@ -2,3 +2,4 @@ export_presets.cfg
 *~
 logs/
 export.cfg
+build.sh
