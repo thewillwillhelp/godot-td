@@ -18,7 +18,10 @@ func _ready():
 
     $SettingsMenu/SaveGameButton.connect("button_up", self, "_on_gui_event", [ "save_game_clicked" ])
     $SettingsMenu/ExitGameButton.connect("button_up", self, "_on_gui_event", [ "exit_game_clicked" ])
+    $GameOverMenu/ExitGameButton.connect("button_up", self, "_on_gui_event", [ "exit_game_clicked" ])
 
+func show_game_over_menu():
+    $GameOverMenu.show()
 
 func _on_gui_event(event_name: String):
     emit_signal("command_send", event_name)

@@ -16,7 +16,7 @@ script = ExtResource( 2 )
 
 [node name="Background" type="ColorRect" parent="."]
 margin_right = 400.0
-margin_bottom = 90.0
+margin_bottom = 110.0
 color = Color( 0.262745, 0.164706, 0.164706, 0.65098 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -133,9 +133,9 @@ visible = false
 position = Vector2( 0, 540 )
 
 [node name="StartWaveButton" type="TextureButton" parent="."]
-margin_left = 100.0
+margin_left = 110.0
 margin_top = 10.0
-margin_right = 200.0
+margin_right = 210.0
 margin_bottom = 110.0
 rect_scale = Vector2( 0.5, 0.5 )
 texture_normal = ExtResource( 7 )
@@ -151,6 +151,9 @@ margin_right = 101.0
 margin_bottom = 101.0
 mouse_filter = 2
 color = Color( 0, 0, 0, 0.611765 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="BuildingMenuButton" type="TextureButton" parent="."]
 margin_left = 250.0
@@ -199,14 +202,55 @@ __meta__ = {
 }
 
 [node name="ScoreLabel" type="Label" parent="."]
-margin_left = 7.0
-margin_top = 7.0
-margin_right = 72.0
-margin_bottom = 85.0
+margin_left = 5.0
+margin_top = 5.0
+margin_right = 74.0
+margin_bottom = 110.0
 custom_fonts/font = ExtResource( 4 )
 text = "Score: 0
 Gold: 0
-Level: 0"
+Level: 0
+Lives: 0"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="GameOverMenu" type="ColorRect" parent="."]
+visible = false
+margin_right = 400.0
+margin_bottom = 720.0
+color = Color( 0.262745, 0.164706, 0.164706, 0.65098 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ExitGameButton" type="TextureButton" parent="GameOverMenu"]
+margin_left = 180.0
+margin_top = 260.0
+margin_right = 280.0
+margin_bottom = 360.0
+rect_scale = Vector2( 0.5, 0.5 )
+texture_normal = ExtResource( 9 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="GameOverMenu/ExitGameButton"]
+show_behind_parent = true
+margin_left = -1.0
+margin_top = -3.0
+margin_right = 101.0
+margin_bottom = 99.0
+mouse_filter = 2
+color = Color( 0, 0, 0, 0.611765 )
+
+[node name="Message" type="Label" parent="GameOverMenu"]
+margin_left = 160.0
+margin_top = 220.0
+margin_right = 244.0
+margin_bottom = 244.0
+custom_fonts/font = ExtResource( 4 )
+text = "Game Over"
 __meta__ = {
 "_edit_use_anchors_": false
 }
