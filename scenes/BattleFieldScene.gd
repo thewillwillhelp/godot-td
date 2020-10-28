@@ -67,7 +67,8 @@ var default_game_data: Dictionary = {
     "field_width": DEFAULT_BATTLEFIELD_COLUMNS_NUMBER,
     "field_height": DEFAULT_BATTLEFIELD_ROWS_NUMBER,
     "gold": 25,
-    "game_level": 1
+    "game_level": 1,
+    "lives": 25
 }
 
 var game_data: Dictionary = default_game_data.duplicate()
@@ -82,6 +83,7 @@ func _ready():
 
     if globals.game_should_be_loaded:
         self.load_game()
+        globals.game_should_be_loaded = false
     else:
         self.start_game()
 
@@ -151,8 +153,9 @@ func update_score_label():
     var score = self.game_data.score
     var gold = self.game_data.gold
     var game_level = self.game_data.game_level
+    var lives = self.game_data.lives
     # @TODO separte these labels
-    $GUI/ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d" % [score, gold, game_level]
+    $GUI/ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d\nLives: %d" % [score, gold, game_level, lives]
 
 func update_building_preview(building_target: String = ""):
     var building_preview_sprite = $GUI/SelectionPreview/Button/Sprite
@@ -298,6 +301,9 @@ func load_game():
     self.game_data = loaded_game_data
     self.start_game(false)
 
+func finish_game():
+    $GUI.show_game_over_menu()
+
 func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector2:
     randomize()
     var side: int = randi() % 4
@@ -426,8 +432,13 @@ func _on_ExitArea_area_entered(area: Area2D) -> void:
 
     if area.entity_class == "Enemy":
         area.queue_free()
-        self.game_data.score -= 10
-        update_score_label()
+        if self.game_data.lives > 0:
+            self.game_data.score -= 10
+            self.game_data.lives -= 1
+            update_score_label()
+
+        if self.game_data.lives == 0:
+            self.finish_game()
 
 func on_kill_mob():
     self.game_data.gold += randi() % 2 + 1
@@ -459,5 +470,5 @@ func _on_mob_create_timer_timeout():
         create_entity()
 
 
-func _on_Node_swipe_is_happened(position: Vector2):
-    $Camera2D.position -= position
+func _on_Node_swipe_is_happened(position_diff: Vector2):
+    $Camera2D.position -= position_diff

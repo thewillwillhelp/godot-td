@@ -13,6 +13,16 @@ extents = Vector2( 25, 25 )
 script = ExtResource( 1 )
 mob_scene = ExtResource( 4 )
 
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="ParallaxBackground"]
+margin_right = 400.0
+margin_bottom = 750.0
+color = Color( 0.607843, 0.0156863, 0.0156863, 0.588235 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="GlobalBackground" type="ColorRect" parent="."]
 visible = false
 margin_right = 400.0
@@ -81,16 +91,6 @@ wait_time = 0.025
 one_shot = true
 
 [node name="GUI" parent="." instance=ExtResource( 2 )]
-
-[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
-
-[node name="ColorRect" type="ColorRect" parent="ParallaxBackground"]
-margin_right = 400.0
-margin_bottom = 750.0
-color = Color( 0.607843, 0.0156863, 0.0156863, 0.588235 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 [connection signal="gui_input" from="BattleField" to="." method="_on_BattleField_gui_input"]
 [connection signal="timeout" from="mob_create_timer" to="." method="_on_mob_create_timer_timeout"]
 [connection signal="area_entered" from="ExitArea" to="." method="_on_ExitArea_area_entered"]
