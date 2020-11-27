@@ -3,10 +3,15 @@ extends CanvasLayer
 signal command_send(command_name)
 signal building_target_selected(construction_type)
 
+var start_texture = preload("res://assets/images/play-button.png")
+var pause_texture = preload("res://assets/images/pause-button.png")
+var is_play_button_pressed = false
+
 onready var selectionPreviewButton = $SelectionPreview/Button
 
 func _ready():
     self.set_process(false)
+    self._update_start_pause_button()
     selectionPreviewButton.connect("button_up", self, "_on_gui_event", [ "selection_preview_clicked" ])
     $ResetGameButton.connect("button_up", self, "_on_gui_event", [ "reset_game_clicked" ])
     $LoadGameButton.connect("button_up", self, "_on_gui_event", [ "load_game_clicked" ])
@@ -24,6 +29,9 @@ func show_game_over_menu():
     $GameOverMenu.show()
 
 func _on_gui_event(event_name: String):
+    if event_name == "start_wave_clicked":
+        self._update_start_pause_button()
+
     emit_signal("command_send", event_name)
 
 func _on_building_menu_event(construction_type: int):
@@ -43,3 +51,10 @@ func _on_setting_button_click():
         $SettingsMenu.show()
     else:
         $SettingsMenu.hide()
+
+func _update_start_pause_button():
+    if is_play_button_pressed:
+        $StartWaveButton.texture_normal = pause_texture
+    else:
+        $StartWaveButton.texture_normal = start_texture
+    is_play_button_pressed = not is_play_button_pressed

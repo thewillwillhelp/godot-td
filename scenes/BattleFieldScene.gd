@@ -12,12 +12,12 @@ const PREVIEW_CANNON_TOWER_RECT: Rect2 = Rect2(100, 0, 50, 100)
 const PREVIEW_WALL_RECT: Rect2 = Rect2(0, -50, 50, 100)
 const PREVIEW_DESTROY_CONSTRUCTION_RECT: Rect2 = Rect2(0, -100, 100, 200)
 
-const BUILDING_AREA_ALLOWED_TOP_LEFT = Vector2(1, 1)
-const BUILDING_AREA_ALLOWED_BOTTOM_RIGHT = Vector2(6, 13)
-const DEFAULT_BATTLEFIELD_ROWS_NUMBER = 15
-const DEFAULT_BATTLEFIELD_COLUMNS_NUMBER = 10
-const GRASS_TILE_INDEX = 1
-const STONE_WALL_TILE_INDEX = 0
+const BUILDING_AREA_ALLOWED_TOP_LEFT: Vector2 = Vector2(1, 1)
+const BUILDING_AREA_ALLOWED_BOTTOM_RIGHT: Vector2 = Vector2(6, 13)
+const DEFAULT_BATTLEFIELD_ROWS_NUMBER: int = 15
+const DEFAULT_BATTLEFIELD_COLUMNS_NUMBER: int = 10
+const GRASS_TILE_INDEX: int = 1
+const STONE_WALL_TILE_INDEX: int = 0
 
 signal battlefield_data_updated
 
@@ -25,6 +25,10 @@ var main_tile_map: TileMap
 var background_tile_map: TileMap
 var target_building: String = ""
 var current_wave_counter: int = 0
+var current_wave_mobs_creation_counter: int = 0
+var is_game_on_pause: bool = true
+var is_wait_next_wave: bool = false
+var time_to_next_wave: int = 0
 
 """
     Construction Types:
@@ -87,7 +91,7 @@ func _ready():
     else:
         self.start_game()
 
-func start_game(is_game_new: bool = true):
+func start_game(is_game_new: bool = true) -> void:
     if is_game_new:
         self.game_data = default_game_data.duplicate()
         self.game_data.start_position = self.get_random_border_position()
@@ -105,7 +109,7 @@ func start_game(is_game_new: bool = true):
 #func _process(delta):
 #    pass
 
-func remove_construction(position):
+func remove_construction(position) -> void:
     var battlefield_data = self.game_data.battlefield_data
     var cell_position = main_tile_map.world_to_map(position)
 
@@ -118,19 +122,18 @@ func remove_construction(position):
 
     update_battle_field_view(battlefield_data)
 
-func raise_game_level():
+func raise_game_level() -> void:
     set_game_level(self.game_data.game_level + 1)
 
-func set_game_level(new_game_level: int):
+func set_game_level(new_game_level: int) -> void:
     self.game_data.game_level = new_game_level
     update_score_label()
 
-func check_and_update_game_level():
+func check_and_update_game_level() -> void:
     if self.game_data.score / (5.0* (self.game_data.game_level*2)) > self.game_data.game_level:
         raise_game_level()
-        pass
 
-func create_entity():
+func create_entity() -> void:
     var next_mob = mob_scene.instance()
     next_mob.entity_type = 1
     if self.game_data.game_level > 5:
@@ -146,18 +149,27 @@ func create_entity():
     next_mob.world_tilemap = main_tile_map
     next_mob.target_position = self.game_data.end_position
     next_mob.connect("was_killed", self, "on_kill_mob")
+    next_mob.connect("tree_exited", self, "_on_mob_disappear")
     self.connect("battlefield_data_updated", next_mob, "on_battlefield_data_changed")
     next_mob.update_escaped_path(self.game_data.battlefield_data)
 
-func update_score_label():
+
+func update_score_label() -> void:
     var score = self.game_data.score
     var gold = self.game_data.gold
     var game_level = self.game_data.game_level
     var lives = self.game_data.lives
     # @TODO separte these labels
-    $GUI/ScoreLabel.text = "Score: %d\nGold: %d\nLevel: %d\nLives: %d" % [score, gold, game_level, lives]
+    var prepared_text: String = "Score: %d\n" % score
+    prepared_text += "Gold: %d\n" % gold
+    prepared_text += "Level: %d\n" % game_level
+    prepared_text += "Lives: %d" % lives
+    if time_to_next_wave > 0:
+        prepared_text += "            Next Wave in %d sec" % time_to_next_wave
+    # prepared_text += "\nLeft: %d" % [ self.current_wave_counter ]
+    $GUI/ScoreLabel.text = prepared_text;
 
-func update_building_preview(building_target: String = ""):
+func update_building_preview(building_target: String = "") -> void:
     var building_preview_sprite = $GUI/SelectionPreview/Button/Sprite
     building_preview_sprite.set_scale(Vector2(2, 2))
     building_preview_sprite.texture = icons_sprite_set
@@ -190,7 +202,7 @@ func is_cell_available_for_building(position: Vector2) -> bool:
     return len(path) > 0
 
 func create_initial_battlefield(width: int, height: int):
-    var battlefield_data = []
+    var battlefield_data: Array = []
     battlefield_data.resize(height)
 
     for row_index in range(0, height):
@@ -261,7 +273,7 @@ func reset_game():
                 battlefield_cell.erase("construction")
 
     $mob_create_timer.stop()
-    self.current_wave_counter = 0
+    self.current_wave_mobs_creation_counter = 0
     self.remove_all_enemies()
     self.start_game()
 
@@ -303,6 +315,20 @@ func load_game():
 
 func finish_game():
     $GUI.show_game_over_menu()
+
+func _update_time_to_next_wave(i):
+    self.time_to_next_wave = 4 - i
+    update_score_label()
+
+func reduce_number_of_mobs(number: int):
+    self.current_wave_counter -= number
+    if self.current_wave_counter == 0:
+        # yield(get_tree().create_timer(5.0), "timeout")
+        self.is_wait_next_wave = true
+        yield(self.wait(5, self, "_update_time_to_next_wave"), "completed")
+        self.is_wait_next_wave = false
+        self.is_game_on_pause = true
+        self._on_StartWaveButton_pressed()
 
 func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector2:
     randomize()
@@ -383,15 +409,29 @@ func _on_BuildingMenu_building_target_selected(construction_type):
         target_building = CONSTRUCTION_TYPE_CANNON_TOWER
     update_building_preview(target_building)
 
-func _on_StartWaveButton_pressed():
-    if current_wave_counter > 0:
+func _on_StartWaveButton_pressed() -> void:
+    if not self.is_game_on_pause:
+        self.is_game_on_pause = true
+        Engine.time_scale = 0
+        return
+    else:
+        self.is_game_on_pause = false
+        Engine.time_scale = 1
+
+    if self.is_wait_next_wave:
+        return
+
+    if self.current_wave_counter > 0:
+        return
+
+    if self.current_wave_mobs_creation_counter > 0:
         return
 
     var mobs_for_level = self.game_data.game_level
     if mobs_for_level > 20: mobs_for_level = 20
     var bonus_mobs = (randi() % (self.game_data.game_level + 2)) % 10
 
-    current_wave_counter = mobs_for_level + bonus_mobs
+    self.current_wave_mobs_creation_counter = mobs_for_level + bonus_mobs
     $mob_create_timer.start()
 
 
@@ -463,12 +503,34 @@ func on_try_build_construction(position, construction_type):
     update_score_label()
 
 func _on_mob_create_timer_timeout():
-    if current_wave_counter == 0:
+    if self.current_wave_mobs_creation_counter == 0:
         $mob_create_timer.stop()
     else:
-        current_wave_counter -= 1
+        self.current_wave_mobs_creation_counter -= 1
+        self.current_wave_counter += 1
+        self.update_score_label()
         create_entity()
 
 
 func _on_Node_swipe_is_happened(position_diff: Vector2):
     $Camera2D.position -= position_diff
+
+func _on_mob_disappear():
+    self.reduce_number_of_mobs(1)
+    self.update_score_label()
+
+func wait(seconds: int = 1, target = null, fnName = null) -> void:
+    var root_tree := get_tree()
+    if not root_tree:
+        return yield()
+    var i := 0
+    if fnName:
+        target.call(fnName, i)
+    i = 1
+
+    while i < seconds:
+        var timer := root_tree.create_timer(1)
+        yield(timer, "timeout")
+        if fnName:
+            target.call(fnName, i)
+        i += 1

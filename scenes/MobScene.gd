@@ -17,30 +17,34 @@ signal was_killed
 const HP_INDICATOR_MAX_WIDTH = 38
 
 # data object constants
-var entity_class = "Enemy"
-var entity_type = 1
+var entity_class: String = "Enemy"
+var entity_type: int = 1
 var escape_path = [] setget set_path
-var difficulty_modifier = 1
-var hit_points = 4
-var max_hp = 4
-var speed = 50
+var difficulty_modifier: int = 1
+var hit_points: int = 4
+var max_hp: int = 4
+var speed: int = 50
 var world_tilemap: TileMap
 var came_from_map: Dictionary
 # target position in tilemap cells
 var target_position: Vector2
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
     update_params_according_type()
     update_hp_label()
     set_process(false)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
+func _process(delta) -> void:
+    if delta < 0:
+        # sometimes negative delta appears
+        return
+
     var distance = delta * speed
     move_along_path(distance)
 
-func move_along_path(distance):
+func move_along_path(distance) -> void:
     var start_position = position
     update_path_line()
     for i in range(escape_path.size()):
@@ -55,18 +59,18 @@ func move_along_path(distance):
         start_position = escape_path[0]
         escape_path.remove(0)
 
-func set_path(value):
+func set_path(value) -> void:
     escape_path = value
     if value.size() == 0:
         return
     set_process(true)
 
-func update_hp_label():
+func update_hp_label() -> void:
     var life_indicator = $HpIndicator/LifeIndicator
     var hp_indicator_width = float(hit_points)/float(max_hp)*HP_INDICATOR_MAX_WIDTH
     life_indicator.rect_size.x = hp_indicator_width
 
-func receive_damage(bullet: Area2D):
+func receive_damage(bullet: Area2D) -> void:
     if not bullet.is_active():
         return
 
@@ -102,14 +106,14 @@ func update_escaped_path(battlefield_data) -> void:
     update_path_line()
     set_path(escape_path)
 
-func update_path_line():
+func update_path_line() -> void:
     var path_line = []
     for step in escape_path:
         path_line.push_back(step - position)
 
     $Line2D.points = path_line
 
-func update_params_according_type():
+func update_params_according_type() -> void:
     if entity_type == 1:
         max_hp = 8
         speed = 50
