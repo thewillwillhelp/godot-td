@@ -314,6 +314,7 @@ func load_game():
     self.start_game(false)
 
 func finish_game():
+    self._on_StartWaveButton_pressed()
     $GUI.show_game_over_menu()
 
 func _update_time_to_next_wave(i):
@@ -322,6 +323,10 @@ func _update_time_to_next_wave(i):
 
 func reduce_number_of_mobs(number: int):
     self.current_wave_counter -= number
+
+    if self.current_wave_mobs_creation_counter > 0:
+        return
+
     if self.current_wave_counter == 0:
         # yield(get_tree().create_timer(5.0), "timeout")
         self.is_wait_next_wave = true

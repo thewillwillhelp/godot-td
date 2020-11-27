@@ -38,7 +38,7 @@ func _ready():
 
 func _draw():
     if radius_is_visible:
-        self.draw_arc(Vector2() , self.radius, 0, 100, 20, Color.red, 2)
+        self.draw_arc(Vector2() , self.radius, 0, 2*PI, 31, Color.red, 2)
 
 func _process(delta):
     if not self.is_ready_to_shot:
