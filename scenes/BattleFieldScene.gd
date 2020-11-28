@@ -47,6 +47,7 @@ const CONSTRUCTION_TYPE_GRASS = "GRASS"
 const CONSTRUCTION_TYPE_TOWER_BASEMENT = "TOWER BASEMENT"
 const CONSTRUCTION_TYPE_BALLISTA_TOWER = "BALLISTA TOWER"
 const CONSTRUCTION_TYPE_CANNON_TOWER = "CANNON TOWER"
+const CONSTRUCTION_TYPE_BARRICADE = "BARRICADE"
 
 const CONSTRUCTION_TYPES_COSTS: Dictionary = {
     "TOWER BASEMENT": 5,
@@ -96,7 +97,8 @@ func start_game(is_game_new: bool = true) -> void:
         self.game_data = default_game_data.duplicate()
         self.game_data.start_position = self.get_random_border_position()
         self.game_data.end_position = self.get_random_border_position(self.game_data.start_position)
-        self.game_data.battlefield_data = create_initial_battlefield(self.game_data.field_width, self.game_data.field_height)
+        self.game_data.battlefield_data = self.create_initial_battlefield(self.game_data.field_width, self.game_data.field_height)
+        self.add_barricades(self.game_data.battlefield_data)
 
     main_tile_map.clear()
     $ExitArea.position = main_tile_map.map_to_world(self.game_data.end_position) + Vector2(25, 25)
@@ -105,6 +107,14 @@ func start_game(is_game_new: bool = true) -> void:
     update_battle_field_view(self.game_data.battlefield_data)
     $BattleField.rect_size = Vector2(self.game_data.field_width * 50, self.game_data.field_height * 50)
     update_score_label()
+
+func output(battlefield_data):
+    var rows = ""
+    for row_index in range(0, len(battlefield_data)):
+        for cell_index in range(0, len(battlefield_data[row_index])):
+            rows += battlefield_data[row_index][cell_index].type[0]
+        rows += "\n"
+    print_debug(rows);
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
@@ -146,7 +156,7 @@ func create_entity() -> void:
     $BattleField.add_child(next_mob)
     next_mob.position = main_tile_map.map_to_world(self.game_data.start_position) + main_tile_map.cell_size / 2
 
-    var target_position = main_tile_map.map_to_world(self.game_data.end_position) + main_tile_map.cell_size
+    # var target_position = main_tile_map.map_to_world(self.game_data.end_position) + main_tile_map.cell_size
     next_mob.world_tilemap = main_tile_map
     next_mob.target_position = self.game_data.end_position
     next_mob.z_index = 2
@@ -198,12 +208,17 @@ func is_cell_available_for_building(position: Vector2) -> bool:
     var cell_position = main_tile_map.world_to_map(position)
     var current_cell_type: String = battlefield_data[cell_position.y][cell_position.x].type
     battlefield_data[cell_position.y][cell_position.x].type = CONSTRUCTION_TYPE_STONE_WALL
-    var came_from_map = utils.get_came_from_map(battlefield_data, self.game_data.start_position, self.game_data.end_position)
+    var came_from_map = utils.get_came_from_map(
+        battlefield_data,
+        self.game_data.start_position,
+        self.game_data.end_position,
+        [CONSTRUCTION_TYPE_GRASS, CONSTRUCTION_TYPE_BARRICADE]
+    )
     var path = utils.find_the_path(came_from_map, self.game_data.start_position, self.game_data.end_position)
     battlefield_data[cell_position.y][cell_position.x].type = current_cell_type
     return len(path) > 0
 
-func create_initial_battlefield(width: int, height: int):
+func create_initial_battlefield(width: int, height: int) -> Array:
     var battlefield_data: Array = []
     battlefield_data.resize(height)
 
@@ -212,6 +227,8 @@ func create_initial_battlefield(width: int, height: int):
         battlefield_data[row_index].resize(width)
         for cell_index in range(0, width):
             var cell = { "type": CONSTRUCTION_TYPE_GRASS }
+
+            # border:
             if ((cell_index == 0 or cell_index == width-1 or
                 row_index == 0 or row_index == height-1) and
                 self.game_data.start_position.distance_squared_to(Vector2(cell_index, row_index)) != 0 and
@@ -222,38 +239,58 @@ func create_initial_battlefield(width: int, height: int):
 
     return battlefield_data
 
-func update_battle_field_view(battlefield_data):
+func add_barricades(battlefield_data: Array):
+    var height = len(battlefield_data)
+    var width = len(battlefield_data[0])
     for row_index in range(0, len(battlefield_data)):
         for cell_index in range(0, len(battlefield_data[row_index])):
-            self.add_construction_to_battlefield(Vector2(cell_index, row_index), battlefield_data[row_index][cell_index].type)
+            if ((cell_index == 0 or cell_index == width-1 or
+                row_index == 0 or row_index == height-1) or
+                self.game_data.start_position.distance_squared_to(Vector2(cell_index, row_index)) == 0 or
+                self.game_data.end_position.distance_squared_to(Vector2(cell_index, row_index)) == 0):
+                continue
+
+            if randi() % 100 > 80:
+                battlefield_data[row_index][cell_index].type = CONSTRUCTION_TYPE_BARRICADE
+
+func update_battle_field_view(battlefield_data: Array):
+    for row_index in range(0, len(battlefield_data)):
+        for cell_index in range(0, len(battlefield_data[row_index])):
+            self.add_construction_to_battlefield(battlefield_data, Vector2(cell_index, row_index), battlefield_data[row_index][cell_index].type)
+            self.background_tile_map.set_cell(cell_index, row_index, CONSTRUCTION_TYPES_TILES[CONSTRUCTION_TYPE_GRASS])
+
+            if not battlefield_data[row_index][cell_index].type in CONSTRUCTION_TYPES_TILES:
+                self.main_tile_map.set_cell(cell_index, row_index, GRASS_TILE_INDEX)
+                continue
             var tile_index = CONSTRUCTION_TYPES_TILES[battlefield_data[row_index][cell_index].type]
             self.main_tile_map.set_cell(cell_index, row_index, tile_index)
-
-            self.background_tile_map.set_cell(cell_index, row_index, CONSTRUCTION_TYPES_TILES[CONSTRUCTION_TYPE_GRASS])
 
     emit_signal("battlefield_data_updated", battlefield_data)
 
 
-func add_construction_to_battlefield(cell_position: Vector2, construction_type: String):
-    if "construction" in self.game_data.battlefield_data[cell_position.y][cell_position.x]:
+func add_construction_to_battlefield(battlefield_data: Array, cell_position: Vector2, construction_type: String):
+    if "construction" in battlefield_data[cell_position.y][cell_position.x]:
         return
 
     # stone tile
-    if self.game_data.battlefield_data[cell_position.y][cell_position.x].type == CONSTRUCTION_TYPE_STONE_WALL:
+    if battlefield_data[cell_position.y][cell_position.x].type == CONSTRUCTION_TYPE_STONE_WALL:
         return
 
-    var tile_name: String
+    # var tile_name: String
 
     var tower: Node2D = tower_scene.instance()
     if construction_type == CONSTRUCTION_TYPE_TOWER_BASEMENT:
-        tile_name = "tower-basement"
+        # tile_name = "tower-basement"
         tower.entity_type = 1
     elif construction_type == CONSTRUCTION_TYPE_BALLISTA_TOWER:
-        tile_name = "ballista-tower"
+        # tile_name = "ballista-tower"
         tower.entity_type = 2
     elif construction_type == CONSTRUCTION_TYPE_CANNON_TOWER:
-        tile_name = "cannon-tower"
+        # tile_name = "cannon-tower"
         tower.entity_type = 3
+    elif construction_type == CONSTRUCTION_TYPE_BARRICADE:
+        # tile_name = "cannon-tower"
+        tower.entity_type = 4
     else:
         tower.queue_free()
         return
@@ -263,8 +300,8 @@ func add_construction_to_battlefield(cell_position: Vector2, construction_type: 
     $BattleField.add_child(tower)
     tower.battle_field = $BattleField
 
-    self.game_data.battlefield_data[cell_position.y][cell_position.x].type = construction_type
-    self.game_data.battlefield_data[cell_position.y][cell_position.x].construction = tower
+    battlefield_data[cell_position.y][cell_position.x].type = construction_type
+    battlefield_data[cell_position.y][cell_position.x].construction = tower
 
 func reset_game():
     for battlefield_row in game_data.battlefield_data:
@@ -277,7 +314,7 @@ func reset_game():
     $mob_create_timer.stop()
     self.current_wave_mobs_creation_counter = 0
     self.remove_all_enemies()
-    self.start_game()
+    # self.start_game()
 
 func remove_all_enemies():
     for child in $BattleField.get_children():
@@ -295,13 +332,12 @@ func save_game():
     file_to_save.store_var(data_to_save)
     file_to_save.close()
 
-func load_game():
+func load_game() -> void:
     var file_to_load = File.new()
     if not file_to_load.file_exists("user://savegame.save"):
         return # Error! We don't have a save to load.
 
     file_to_load.open("user://savegame.save", File.READ)
-
     var loaded_game_data = file_to_load.get_var()
     file_to_load.close()
 
@@ -312,6 +348,7 @@ func load_game():
                 cell.erase("construction")
 
     self.reset_game()
+    print_debug("next: reload game data")
     self.game_data = loaded_game_data
     self.start_game(false)
 
@@ -444,7 +481,7 @@ func _on_StartWaveButton_pressed() -> void:
 
 func _on_BattleField_gui_input(event: InputEvent):
     if event is InputEventMouseButton:
-        var battleFieldRect = $BattleField.get_rect()
+        # var battleFieldRect = $BattleField.get_rect()
         if event.button_index == BUTTON_LEFT:
             if $SwipeDetector.is_screen_moved():
                 return

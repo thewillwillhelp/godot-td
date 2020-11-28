@@ -15,17 +15,16 @@ static func find_the_path(came_from_map: Dictionary, current_position: Vector2, 
     else:
         return []
 
-static func get_came_from_map(battlefield_data, current_position: Vector2, target_position: Vector2):
+static func get_came_from_map(battlefield_data, current_position: Vector2, target_position: Vector2, free_cell_types: Array = ["GRASS"]):
     var came_from_map = {}
 
     var queue = [current_position]
     while (len(queue) != 0):
-        if randi() % 100 > 99: print_debug('get came from map')
         var next_position = queue.pop_front()
         if next_position.distance_squared_to(target_position) == 0:
             break
 
-        var neighbors = find_free_neighbour(battlefield_data, next_position, "GRASS")
+        var neighbors = find_free_neighbour(battlefield_data, next_position, free_cell_types)
 
         for nei in neighbors:
             if not nei in came_from_map:
@@ -42,7 +41,7 @@ static func get_came_from_map(battlefield_data, current_position: Vector2, targe
 
     return came_from_map
 
-static func find_free_neighbour(battlefield_data, cell_position: Vector2, free_cell_type: String):
+static func find_free_neighbour(battlefield_data, cell_position: Vector2, free_cell_types: Array):
     var free_neighbours = []
     var max_y = len(battlefield_data)
     var max_x = len(battlefield_data[0])
@@ -60,8 +59,11 @@ static func find_free_neighbour(battlefield_data, cell_position: Vector2, free_c
                 continue
 
             var cell_type = battlefield_data[nei_position.y][nei_position.x].type
-            if free_cell_type == cell_type:
-                free_neighbours.push_back(nei_position)
+
+            for free_cell_type in free_cell_types:
+                if free_cell_type == cell_type:
+                    free_neighbours.push_back(nei_position)
+                    break
 
     return free_neighbours
 

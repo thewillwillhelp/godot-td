@@ -254,5 +254,4 @@ text = "Game Over"
 __meta__ = {
 "_edit_use_anchors_": false
 }
-[connection signal="button_up" from="SelectionPreview/Button" to="." method="_on_Selection_preview_click"]
 [connection signal="close_menu" from="BuildingMenu" to="." method="_on_BuildingMenu_close_menu"]

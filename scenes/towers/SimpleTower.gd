@@ -2,34 +2,59 @@ extends Node2D
 
 signal tower_was_selected
 
+const PREVIEW_TOWER_RECT: Rect2 = Rect2(50, 0, 50, 100)
+const PREVIEW_CANNON_TOWER_RECT: Rect2 = Rect2(100, 0, 50, 100)
+const PREVIEW_WALL_RECT: Rect2 = Rect2(0, -50, 50, 100)
+const PREVIEW_BARRICADE_RECT := Rect2(0, 0, 100, 100)
+const TEXTURE_BARRICADE = preload("res://assets/images/barricade.png")
+const TEXTURE_SPRITESET = preload("res://assets/images/SpriteSet.png")
+
 var bullet_scene: PackedScene = preload("res://scenes/bullets/Simple_Bullet.tscn")
 var battle_field: Node
 var entity_class = "Construction"
 var entity_type = 1
 var bullet_type = 0
-var cooldown_time: int = 1
+var cooldown_time: float = 1
 var radius = 150
 var radius_is_visible = false
 var is_ready_to_shot = false
 var reloading_timer_counter = 0
+var movement_factor = 1
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
     set_process(false)
 
     if self.entity_type == 1:
-        $Sprite.region_rect = Rect2(0, -50, 50, 100)
+        $Sprite.visible = false
+        $Sprite.set_offset(Vector2(0, -25))
+        $Sprite.texture = TEXTURE_SPRITESET
+        $Sprite.region_rect = PREVIEW_WALL_RECT
         self.bullet_type = 0
     elif self.entity_type == 2:
-        $Sprite.region_rect = Rect2(50, 0, 50, 100)
+        $Sprite.visible = false
+        $Sprite.set_offset(Vector2(0, -25))
+        $Sprite.texture = TEXTURE_SPRITESET
+        $Sprite.region_rect = PREVIEW_TOWER_RECT
         self.radius = 175
         self.cooldown_time = 1
         self.bullet_type = 1
     elif self.entity_type == 3:
-        $Sprite.region_rect = Rect2(100, 0, 50, 100)
+        $Sprite.visible = false
+        $Sprite.set_offset(Vector2(0, -25))
+        $Sprite.texture = TEXTURE_SPRITESET
+        $Sprite.region_rect = PREVIEW_CANNON_TOWER_RECT
         self.radius = 100
         self.cooldown_time = 1.5
         self.bullet_type = 2
+    elif self.entity_type == 4:
+        $Sprite.visible = true
+        $Sprite.texture = TEXTURE_BARRICADE
+        $Sprite.set_scale(Vector2(0.5, 0.5))
+        $Sprite.set_offset(Vector2(0, 0))
+        $Sprite.region_rect = PREVIEW_BARRICADE_RECT
+        self.movement_factor = 0.5
+        self.bullet_type = 0
 
     if self.bullet_type > 0:
         self.set_process(true)
@@ -37,7 +62,7 @@ func _ready():
         $TextureProgress.visible = false
 
 func _draw():
-    if radius_is_visible:
+    if self.radius_is_visible:
         self.draw_arc(Vector2() , self.radius, 0, 2*PI, 31, Color.red, 2)
 
 func _process(delta):
@@ -89,6 +114,9 @@ func _on_Control_gui_input(event: InputEvent):
 
 func toggle_radius_visibility():
     if self.entity_type == 1:
+        return
+
+    if self.entity_type == 4:
         return
 
     if self.radius_is_visible:

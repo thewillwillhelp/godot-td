@@ -24,8 +24,9 @@ var difficulty_modifier: int = 1
 var hit_points: int = 4
 var max_hp: int = 4
 var speed: int = 50
+var default_speed: int = 50
 var world_tilemap: TileMap
-var came_from_map: Dictionary
+# var came_from_map: Dictionary
 # target position in tilemap cells
 var target_position: Vector2
 
@@ -95,16 +96,19 @@ func _on_Area2D_area_entered(area: Area2D) -> void:
         self.receive_damage(area)
         area.queue_free()
 
-func on_battlefield_data_changed(updated_battlefield_data) -> void:
+    if area.entity_class == "Construction":
+        self.speed = area.movement_factor * self.speed
+
+func on_battlefield_data_changed(updated_battlefield_data: Array) -> void:
     update_escaped_path(updated_battlefield_data)
 
 func update_escaped_path(battlefield_data) -> void:
     var current_cell_position = world_tilemap.world_to_map(position)
-    var came_from_map = utils.get_came_from_map(battlefield_data, current_cell_position, target_position)
+    var came_from_map = utils.get_came_from_map(battlefield_data, current_cell_position, target_position, ["BARRICADE", "GRASS"])
     var path = utils.find_the_path(came_from_map, current_cell_position, target_position)
-    var escape_path = utils.convert_tilemap_positions_to_real(world_tilemap, path)
+    var updated_escape_path = utils.convert_tilemap_positions_to_real(world_tilemap, path)
     update_path_line()
-    set_path(escape_path)
+    set_path(updated_escape_path)
 
 func update_path_line() -> void:
     var path_line = []
@@ -114,12 +118,23 @@ func update_path_line() -> void:
     $Line2D.points = path_line
 
 func update_params_according_type() -> void:
-    if entity_type == 1:
-        max_hp = 8
-        speed = 50
-    if entity_type == 2:
-        max_hp = 3
-        speed = 90
+    if self.entity_type == 1:
+        self.max_hp = 8
+        self.default_speed = 50
+        self.speed = 50
+    if self.entity_type == 2:
+        self.max_hp = 3
+        self.default_speed = 90
+        self.speed = 90
 
-    max_hp = difficulty_modifier * max_hp
-    hit_points = max_hp
+    self.max_hp = self.difficulty_modifier * self.max_hp
+    self.hit_points = self.max_hp
+
+
+func _on_MobScene_area_exited(area: Area2D):
+    if not "entity_class" in area:
+        return
+
+    if area.entity_class == "Construction":
+        self.speed = self.speed / area.movement_factor
+        # self.default_speed
