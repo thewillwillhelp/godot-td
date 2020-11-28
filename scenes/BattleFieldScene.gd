@@ -100,6 +100,7 @@ func start_game(is_game_new: bool = true) -> void:
 
     main_tile_map.clear()
     $ExitArea.position = main_tile_map.map_to_world(self.game_data.end_position) + Vector2(25, 25)
+    $EnterArea.position = main_tile_map.map_to_world(self.game_data.start_position) + Vector2(25, 25)
 
     update_battle_field_view(self.game_data.battlefield_data)
     $BattleField.rect_size = Vector2(self.game_data.field_width * 50, self.game_data.field_height * 50)
@@ -148,6 +149,7 @@ func create_entity() -> void:
     var target_position = main_tile_map.map_to_world(self.game_data.end_position) + main_tile_map.cell_size
     next_mob.world_tilemap = main_tile_map
     next_mob.target_position = self.game_data.end_position
+    next_mob.z_index = 2
     next_mob.connect("was_killed", self, "on_kill_mob")
     next_mob.connect("tree_exited", self, "_on_mob_disappear")
     self.connect("battlefield_data_updated", next_mob, "on_battlefield_data_changed")
