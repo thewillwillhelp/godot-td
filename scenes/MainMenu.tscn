@@ -89,6 +89,46 @@ margin_right = 200.0
 margin_bottom = 152.0
 custom_fonts/font = SubResource( 2 )
 text = "Exit"
+
+[node name="FreeGameModes" type="VBoxContainer" parent="TextureRect/VBoxContainer/CenterContainer"]
+visible = false
+margin_left = 74.0
+margin_top = 188.0
+margin_right = 274.0
+margin_bottom = 395.0
+rect_min_size = Vector2( 200, 0 )
+custom_constants/separation = 13
+
+[node name="ModeButton_15x10" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/FreeGameModes"]
+margin_right = 200.0
+margin_bottom = 42.0
+custom_fonts/font = SubResource( 2 )
+text = "15 x 10"
+
+[node name="ModeButton_20x15" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/FreeGameModes"]
+margin_top = 55.0
+margin_right = 200.0
+margin_bottom = 97.0
+custom_fonts/font = SubResource( 2 )
+text = "20 x 15"
+
+[node name="ModeButton_20x20" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/FreeGameModes"]
+margin_top = 110.0
+margin_right = 200.0
+margin_bottom = 152.0
+custom_fonts/font = SubResource( 2 )
+text = "20 x 20"
+
+[node name="Back" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/FreeGameModes"]
+margin_top = 165.0
+margin_right = 200.0
+margin_bottom = 207.0
+custom_fonts/font = SubResource( 2 )
+text = "Back"
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/NewFreeGameButton" to="." method="_on_NewFreeGameButton_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/LoadFreeGameButton" to="." method="_on_LoadFreeGameButton_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/ExitButton" to="." method="_on_ExitButton_pressed"]
+[connection signal="button_up" from="TextureRect/VBoxContainer/CenterContainer/FreeGameModes/ModeButton_15x10" to="." method="_on_start_free_game" binds= [ 0 ]]
+[connection signal="button_up" from="TextureRect/VBoxContainer/CenterContainer/FreeGameModes/ModeButton_20x15" to="." method="_on_start_free_game" binds= [ 1 ]]
+[connection signal="button_up" from="TextureRect/VBoxContainer/CenterContainer/FreeGameModes/ModeButton_20x20" to="." method="_on_start_free_game" binds= [ 2 ]]
+[connection signal="button_up" from="TextureRect/VBoxContainer/CenterContainer/FreeGameModes/Back" to="." method="_on_free_modes_Back_button_up"]

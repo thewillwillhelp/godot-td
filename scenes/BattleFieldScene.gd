@@ -19,6 +19,15 @@ const DEFAULT_BATTLEFIELD_COLUMNS_NUMBER: int = 10
 const GRASS_TILE_INDEX: int = 1
 const STONE_WALL_TILE_INDEX: int = 0
 
+const MODE_SIZES := [
+    # Vector2(10, 15),
+    # Vector2(15, 20),
+    # Vector2(20, 20)
+    [10, 15],
+    [15, 20],
+    [20, 20]
+]
+
 signal battlefield_data_updated
 
 var main_tile_map: TileMap
@@ -97,6 +106,8 @@ func _ready():
 func start_game(is_game_new: bool = true) -> void:
     if is_game_new:
         self.game_data = default_game_data.duplicate()
+        self.game_data.field_width = MODE_SIZES[globals.game_start_config["mode_size"]][0]
+        self.game_data.field_height = MODE_SIZES[globals.game_start_config["mode_size"]][1]
         self.game_data.start_position = self.get_random_border_position()
         self.game_data.end_position = self.get_random_border_position(self.game_data.start_position)
         self.game_data.battlefield_data = self.create_initial_battlefield(self.game_data.field_width, self.game_data.field_height)
@@ -403,12 +414,13 @@ func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector
     return result_position
 
 func get_camera_borders(game_data) -> Dictionary:
-    var camera_max_scroll = Vector2(self.game_data.field_width * 50, self.game_data.field_height * 50)
-    var camera_x_shift = camera_max_scroll.x / self.game_data.field_width + 50
-    var camera_y_shift = camera_max_scroll.y / self.game_data.field_height
+    var border_min_x = get_viewport().size.x / 2 - 50
+    var border_min_y = get_viewport().size.y / 2 - 50
+    var broder_max_x = self.game_data.field_width * 50 - border_min_x
+    var broder_max_y = self.game_data.field_height * 50 - border_min_y
     var camera_borders = {}
-    camera_borders.min = Vector2(camera_max_scroll.x / 2 - camera_x_shift, camera_max_scroll.y / 2 - camera_y_shift)
-    camera_borders.max = Vector2(camera_max_scroll.x / 2 + camera_x_shift, camera_max_scroll.y / 2 + camera_y_shift)
+    camera_borders.min = Vector2(border_min_x, border_min_y)
+    camera_borders.max = Vector2(broder_max_x, broder_max_y)
     return camera_borders
 
 
