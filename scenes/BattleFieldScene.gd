@@ -414,8 +414,8 @@ func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector
     return result_position
 
 func get_camera_borders(game_data) -> Dictionary:
-    var border_min_x = get_viewport().size.x / 2 - 50
-    var border_min_y = get_viewport().size.y / 2 - 50
+    var border_min_x = ProjectSettings.get_setting("display/window/size/width") / 2 - 50
+    var border_min_y = ProjectSettings.get_setting("display/window/size/height") / 2 - 50
     var broder_max_x = self.game_data.field_width * 50 - border_min_x
     var broder_max_y = self.game_data.field_height * 50 - border_min_y
     var camera_borders = {}
