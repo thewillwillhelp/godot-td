@@ -23,7 +23,7 @@ var escape_path = [] setget set_path
 var difficulty_modifier: int = 1
 var hit_points: int = 4
 var max_hp: int = 4
-var speed: int = 50
+var speed: float = 50
 var default_speed: int = 50
 var world_tilemap: TileMap
 # var came_from_map: Dictionary
@@ -120,11 +120,9 @@ func update_path_line() -> void:
 func update_params_according_type() -> void:
     if self.entity_type == 1:
         self.max_hp = 8
-        self.default_speed = 50
         self.speed = 50
     if self.entity_type == 2:
         self.max_hp = 3
-        self.default_speed = 90
         self.speed = 90
 
     self.max_hp = self.difficulty_modifier * self.max_hp
@@ -136,5 +134,4 @@ func _on_MobScene_area_exited(area: Area2D):
         return
 
     if area.entity_class == "Construction":
-        self.speed = self.speed / area.movement_factor
-        # self.default_speed
+        self.speed = round(self.speed / area.movement_factor)

@@ -76,6 +76,8 @@ var default_game_data: Dictionary = {
     "lives": 25
 }
 
+var camera_borders: Dictionary
+
 var game_data: Dictionary = default_game_data.duplicate()
 
 # Called when the node enters the scene tree for the first time.
@@ -103,6 +105,8 @@ func start_game(is_game_new: bool = true) -> void:
     main_tile_map.clear()
     $ExitArea.position = main_tile_map.map_to_world(self.game_data.end_position) + Vector2(25, 25)
     $EnterArea.position = main_tile_map.map_to_world(self.game_data.start_position) + Vector2(25, 25)
+
+    camera_borders = self.get_camera_borders(self.game_data)
 
     update_battle_field_view(self.game_data.battlefield_data)
     $BattleField.rect_size = Vector2(self.game_data.field_width * 50, self.game_data.field_height * 50)
@@ -398,6 +402,14 @@ func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector
 
     return result_position
 
+func get_camera_borders(game_data) -> Dictionary:
+    var camera_max_scroll = Vector2(self.game_data.field_width * 50, self.game_data.field_height * 50)
+    var camera_x_shift = camera_max_scroll.x / self.game_data.field_width + 50
+    var camera_y_shift = camera_max_scroll.y / self.game_data.field_height
+    var camera_borders = {}
+    camera_borders.min = Vector2(camera_max_scroll.x / 2 - camera_x_shift, camera_max_scroll.y / 2 - camera_y_shift)
+    camera_borders.max = Vector2(camera_max_scroll.x / 2 + camera_x_shift, camera_max_scroll.y / 2 + camera_y_shift)
+    return camera_borders
 
 
 #####
@@ -557,7 +569,16 @@ func _on_mob_create_timer_timeout():
 
 
 func _on_Node_swipe_is_happened(position_diff: Vector2):
-    $Camera2D.position -= position_diff
+    var next_position = $Camera2D.position - position_diff
+    if next_position.x < camera_borders.min.x:
+        next_position.x = camera_borders.min.x
+    if next_position.y < camera_borders.min.y:
+        next_position.y = camera_borders.min.y
+    if next_position.x > camera_borders.max.x:
+        next_position.x = camera_borders.max.x
+    if next_position.y > camera_borders.max.y:
+        next_position.y = camera_borders.max.y
+    $Camera2D.position = next_position
 
 func _on_mob_disappear():
     self.reduce_number_of_mobs(1)
