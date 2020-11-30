@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://assets/fonts/FONT-Bebas-neue.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://scenes/MainMenu.gd" type="Script" id=2]
+[ext_resource path="res://assets/images/main-background.png" type="Texture" id=3]
 
 [sub_resource type="DynamicFont" id=1]
 size = 40
@@ -31,6 +32,12 @@ color = Color( 0.380392, 0.670588, 0.113725, 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="Sprite" type="Sprite" parent="TextureRect"]
+texture = ExtResource( 3 )
+centered = false
+region_enabled = true
+region_rect = Rect2( 0, 0, 400, 720 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="TextureRect"]
 anchor_right = 1.0
