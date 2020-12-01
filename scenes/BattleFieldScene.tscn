@@ -6,7 +6,7 @@
 [ext_resource path="res://scenes/MobScene.tscn" type="PackedScene" id=4]
 [ext_resource path="res://assets/images/exit-portal.png" type="Texture" id=5]
 [ext_resource path="res://assets/images/enter-portal.png" type="Texture" id=6]
-[ext_resource path="res://assets/images/main-background.png" type="Texture" id=7]
+[ext_resource path="res://assets/images/main-background-v2.png" type="Texture" id=7]
 [ext_resource path="res://scenes/swipe_detector.gd" type="Script" id=11]
 
 [sub_resource type="RectangleShape2D" id=1]

@@ -2,7 +2,7 @@
 
 [ext_resource path="res://assets/fonts/FONT-Bebas-neue.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://scenes/MainMenu.gd" type="Script" id=2]
-[ext_resource path="res://assets/images/main-background.png" type="Texture" id=3]
+[ext_resource path="res://assets/images/main-background-v2.png" type="Texture" id=3]
 
 [sub_resource type="DynamicFont" id=1]
 size = 40
