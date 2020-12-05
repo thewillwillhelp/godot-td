@@ -70,30 +70,40 @@ __meta__ = {
 
 [node name="MenuButtons" type="VBoxContainer" parent="TextureRect/VBoxContainer/CenterContainer"]
 margin_left = 75.0
-margin_top = 215.0
+margin_top = 188.0
 margin_right = 275.0
-margin_bottom = 367.0
+margin_bottom = 395.0
 rect_min_size = Vector2( 200, 0 )
 custom_constants/separation = 13
 alignment = 1
 
-[node name="NewFreeGameButton" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/MenuButtons"]
+[node name="StartNewCampaignButton" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/MenuButtons"]
 margin_right = 200.0
 margin_bottom = 42.0
 custom_fonts/font = SubResource( 2 )
-text = "New free game"
+text = "New campaign"
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="LoadFreeGameButton" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/MenuButtons"]
+[node name="NewFreeGameButton" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/MenuButtons"]
 margin_top = 55.0
 margin_right = 200.0
 margin_bottom = 97.0
 custom_fonts/font = SubResource( 2 )
-text = "Load free game"
+text = "New free game"
 
-[node name="ExitButton" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/MenuButtons"]
+[node name="LoadFreeGameButton" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/MenuButtons"]
 margin_top = 110.0
 margin_right = 200.0
 margin_bottom = 152.0
+custom_fonts/font = SubResource( 2 )
+text = "Load free game"
+
+[node name="ExitButton" type="Button" parent="TextureRect/VBoxContainer/CenterContainer/MenuButtons"]
+margin_top = 165.0
+margin_right = 200.0
+margin_bottom = 207.0
 custom_fonts/font = SubResource( 2 )
 text = "Exit"
 
@@ -132,6 +142,7 @@ margin_right = 200.0
 margin_bottom = 207.0
 custom_fonts/font = SubResource( 2 )
 text = "Back"
+[connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/StartNewCampaignButton" to="." method="_on_start_new_campaign"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/NewFreeGameButton" to="." method="_on_NewFreeGameButton_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/LoadFreeGameButton" to="." method="_on_LoadFreeGameButton_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/CenterContainer/MenuButtons/ExitButton" to="." method="_on_ExitButton_pressed"]

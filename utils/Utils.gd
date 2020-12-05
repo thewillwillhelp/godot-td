@@ -74,3 +74,15 @@ static func convert_tilemap_positions_to_real(tile_map: TileMap, cells_positions
         real_positions.push_back(tile_map.map_to_world(cell_position) + cell_center)
 
     return real_positions
+
+static func merge_dictionaries(target: Dictionary, patch: Dictionary) -> Dictionary:
+    for key in patch:
+        target[key] = patch[key]
+
+    return target
+
+static func merge_dictionaries_by_fields(target: Dictionary, patch: Dictionary, field_list: Array) -> Dictionary:
+    for field_name in field_list:
+        target[field_name] = patch[field_name]
+
+    return target

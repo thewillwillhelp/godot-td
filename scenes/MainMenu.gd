@@ -32,3 +32,6 @@ func _on_start_free_game(mode: int):
 func _on_free_modes_Back_button_up():
     main_menu_buttons_panel.visible = true
     free_game_modes_panel.visible = false
+
+func _on_start_new_campaign():
+    get_tree().change_scene("res://scenes/Campaign.tscn")

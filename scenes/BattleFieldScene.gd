@@ -2,6 +2,8 @@ extends Node2D
 
 export (PackedScene) var mob_scene: PackedScene
 
+signal waves_finished
+
 var tower_scene: PackedScene = preload("res://scenes/towers/SimpleTower.tscn")
 var utils: GDScript = preload("res://utils/Utils.gd")
 var icon_destroy_construction = preload("res://assets/images/destroy-construction-v2.png")
@@ -82,12 +84,15 @@ var default_game_data: Dictionary = {
     "field_height": DEFAULT_BATTLEFIELD_ROWS_NUMBER,
     "gold": 25,
     "game_level": 1,
-    "lives": 25
+    "lives": 25,
+    "current_wave": 0
+    # "max_waves": 10
 }
 
 var camera_borders: Dictionary
 
 var game_data: Dictionary = default_game_data.duplicate()
+var start_automatically := true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -101,23 +106,28 @@ func _ready():
         self.load_game()
         globals.game_should_be_loaded = false
     else:
-        self.start_game()
+        if self.start_automatically:
+            self.start_game()
 
-func start_game(is_game_new: bool = true) -> void:
+func start_game(is_game_new: bool = true, preloaded_game_data: Dictionary = {}) -> void:
     if is_game_new:
-        self.game_data = default_game_data.duplicate()
-        self.game_data.field_width = MODE_SIZES[globals.game_start_config["mode_size"]][0]
-        self.game_data.field_height = MODE_SIZES[globals.game_start_config["mode_size"]][1]
-        self.game_data.start_position = self.get_random_border_position()
-        self.game_data.end_position = self.get_random_border_position(self.game_data.start_position)
-        self.game_data.battlefield_data = self.create_initial_battlefield(self.game_data.field_width, self.game_data.field_height)
-        self.add_barricades(self.game_data.battlefield_data)
+        if preloaded_game_data.empty():
+            self.game_data = default_game_data.duplicate()
+            self.game_data.field_width = MODE_SIZES[globals.game_start_config["mode_size"]][0]
+            self.game_data.field_height = MODE_SIZES[globals.game_start_config["mode_size"]][1]
+            self.game_data.start_position = self.get_random_border_position()
+            self.game_data.end_position = self.get_random_border_position(self.game_data.start_position)
+            self.game_data.battlefield_data = self.create_initial_battlefield(self.game_data.field_width, self.game_data.field_height)
+            self.add_barricades(self.game_data.battlefield_data)
+        else:
+            self.game_data = utils.merge_dictionaries(default_game_data.duplicate(), preloaded_game_data)
 
     main_tile_map.clear()
     $ExitArea.position = main_tile_map.map_to_world(self.game_data.end_position) + Vector2(25, 25)
     $EnterArea.position = main_tile_map.map_to_world(self.game_data.start_position) + Vector2(25, 25)
 
     camera_borders = self.get_camera_borders(self.game_data)
+    self._on_Node_swipe_is_happened(Vector2())
 
     update_battle_field_view(self.game_data.battlefield_data)
     $BattleField.rect_size = Vector2(self.game_data.field_width * 50, self.game_data.field_height * 50)
@@ -375,19 +385,26 @@ func _update_time_to_next_wave(i):
     self.time_to_next_wave = 4 - i
     update_score_label()
 
-func reduce_number_of_mobs(number: int):
+func reduce_number_of_mobs(number: int) -> void:
     self.current_wave_counter -= number
 
     if self.current_wave_mobs_creation_counter > 0:
         return
 
     if self.current_wave_counter == 0:
+        if self.game_data.has("max_waves"):
+            if self.game_data.current_wave == self.game_data.max_waves:
+                emit_signal("waves_finished")
+                return
+
+        # no waves limit
         # yield(get_tree().create_timer(5.0), "timeout")
         self.is_wait_next_wave = true
         yield(self.wait(5, self, "_update_time_to_next_wave"), "completed")
         self.is_wait_next_wave = false
         self.is_game_on_pause = true
         self._on_StartWaveButton_pressed()
+        self.game_data.current_wave += 1
 
 func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector2:
     randomize()
