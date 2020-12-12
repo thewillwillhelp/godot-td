@@ -404,7 +404,8 @@ func reduce_number_of_mobs(number: int) -> void:
         self.is_wait_next_wave = false
         self.is_game_on_pause = true
         self._on_StartWaveButton_pressed()
-        self.game_data.current_wave += 1
+        if self.game_data.has("max_waves"):
+            self.game_data.current_wave += 1
 
 func get_random_border_position(to_keep_distance: Vector2 = Vector2()) -> Vector2:
     randomize()

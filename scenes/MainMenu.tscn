@@ -109,9 +109,9 @@ text = "Exit"
 
 [node name="FreeGameModes" type="VBoxContainer" parent="TextureRect/VBoxContainer/CenterContainer"]
 visible = false
-margin_left = 74.0
+margin_left = 75.0
 margin_top = 188.0
-margin_right = 274.0
+margin_right = 275.0
 margin_bottom = 395.0
 rect_min_size = Vector2( 200, 0 )
 custom_constants/separation = 13

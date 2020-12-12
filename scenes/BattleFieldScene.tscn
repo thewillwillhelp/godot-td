@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://scenes/BattleFieldScene.gd" type="Script" id=1]
 [ext_resource path="res://scenes/Battle_GUI.tscn" type="PackedScene" id=2]
@@ -7,10 +7,36 @@
 [ext_resource path="res://assets/images/exit-portal.png" type="Texture" id=5]
 [ext_resource path="res://assets/images/enter-portal.png" type="Texture" id=6]
 [ext_resource path="res://assets/images/main-background-v2.png" type="Texture" id=7]
+[ext_resource path="res://assets/images/particles/effect_4.png" type="Texture" id=9]
 [ext_resource path="res://scenes/swipe_detector.gd" type="Script" id=11]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 5, 5 )
+
+[sub_resource type="Gradient" id=2]
+offsets = PoolRealArray( 0, 0.906475 )
+colors = PoolColorArray( 0.0117647, 0.0117647, 0.0117647, 1, 0.00784314, 0.380392, 0.976471, 1 )
+
+[sub_resource type="GradientTexture" id=3]
+gradient = SubResource( 2 )
+
+[sub_resource type="ParticlesMaterial" id=4]
+flag_disable_z = true
+gravity = Vector3( 0, 0, 0 )
+angular_velocity = -210.33
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+linear_accel = -75.28
+tangential_accel = 80.9
+color_ramp = SubResource( 3 )
+
+[sub_resource type="ParticlesMaterial" id=5]
+flag_disable_z = true
+gravity = Vector3( 0, 0, 0 )
+angular_velocity = -291.24
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+color = Color( 1, 0, 0, 1 )
 
 [node name="BattleFieldScene" type="Node2D"]
 script = ExtResource( 1 )
@@ -94,8 +120,15 @@ __meta__ = {
 }
 
 [node name="Sprite" type="Sprite" parent="ExitArea"]
+visible = false
 scale = Vector2( 0.5, 0.5 )
 texture = ExtResource( 6 )
+
+[node name="ExitPortalParticles" type="Particles2D" parent="ExitArea"]
+scale = Vector2( 1.5, 1.5 )
+speed_scale = 0.5
+process_material = SubResource( 4 )
+texture = ExtResource( 9 )
 
 [node name="SwipeDetector" type="Node" parent="."]
 script = ExtResource( 11 )
@@ -110,8 +143,15 @@ one_shot = true
 position = Vector2( 175, 25 )
 
 [node name="Sprite" type="Sprite" parent="EnterArea"]
+visible = false
 scale = Vector2( 0.5, 0.5 )
 texture = ExtResource( 5 )
+
+[node name="EnterPortalParticles" type="Particles2D" parent="EnterArea"]
+scale = Vector2( 1.5, 1.5 )
+speed_scale = 0.5
+process_material = SubResource( 5 )
+texture = ExtResource( 9 )
 [connection signal="gui_input" from="BattleField" to="." method="_on_BattleField_gui_input"]
 [connection signal="timeout" from="mob_create_timer" to="." method="_on_mob_create_timer_timeout"]
 [connection signal="area_entered" from="ExitArea" to="." method="_on_ExitArea_area_entered"]
