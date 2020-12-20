@@ -12,6 +12,8 @@ const TEXTURE_SPRITESET = preload("res://assets/images/SpriteSet.png")
 var bullet_scene: PackedScene = preload("res://scenes/bullets/Simple_Bullet.tscn")
 var battle_field: Node
 var entity_class = "Construction"
+var max_durablity = 5
+var durability = 5
 var entity_type = 1
 var bullet_type = 0
 var cooldown_time: float = 1
@@ -135,3 +137,6 @@ func hide_radius():
 func update_loading_progress_indicator():
     if self.entity_type > 0:
         $TextureProgress.value = self.reloading_timer_counter / self.cooldown_time * 100
+
+func reduce_durability():
+    pass

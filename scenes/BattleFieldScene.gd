@@ -7,6 +7,7 @@ signal waves_finished
 var tower_scene: PackedScene = preload("res://scenes/towers/SimpleTower.tscn")
 var utils: GDScript = preload("res://utils/Utils.gd")
 var icon_destroy_construction = preload("res://assets/images/destroy-construction-v2.png")
+var icon_construction_barricade = preload("res://assets/images/barricade.png")
 var icons_sprite_set = preload("res://assets/images/SpriteSet.png")
 
 const PREVIEW_TOWER_RECT: Rect2 = Rect2(50, 0, 50, 100)
@@ -61,6 +62,7 @@ const CONSTRUCTION_TYPE_CANNON_TOWER = "CANNON TOWER"
 const CONSTRUCTION_TYPE_BARRICADE = "BARRICADE"
 
 const CONSTRUCTION_TYPES_COSTS: Dictionary = {
+    "BARRICADE": 5,
     "TOWER BASEMENT": 5,
     "BALLISTA TOWER": 10,
     "CANNON TOWER": 30
@@ -93,6 +95,7 @@ var camera_borders: Dictionary
 
 var game_data: Dictionary = default_game_data.duplicate()
 var start_automatically := true
+var last_selected_building
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -197,7 +200,8 @@ func update_score_label() -> void:
     var game_level = self.game_data.game_level
     var lives = self.game_data.lives
     # @TODO separte these labels
-    var prepared_text: String = "Score: %d\n" % score
+    var prepared_text: String = ""
+    # prepared_text = "Score: %d\n" % score
     prepared_text += "Gold: %d\n" % gold
     prepared_text += "Level: %d\n" % game_level
     prepared_text += "Lives: %d" % lives
@@ -219,6 +223,11 @@ func update_building_preview(building_target: String = "") -> void:
     elif building_target == CONSTRUCTION_TYPE_TOWER_BASEMENT:
         building_preview_sprite.set_region_rect(PREVIEW_WALL_RECT)
         building_preview_sprite.visible = true
+    elif building_target == CONSTRUCTION_TYPE_BARRICADE:
+        building_preview_sprite.set_scale(Vector2(1, 1))
+        building_preview_sprite.texture = icon_construction_barricade
+        building_preview_sprite.set_region_rect(PREVIEW_DESTROY_CONSTRUCTION_RECT)
+        building_preview_sprite.visible = true
     elif building_target == CONSTRUCTION_TYPE_DESTROY:
         building_preview_sprite.set_scale(Vector2(1, 1))
         building_preview_sprite.texture = icon_destroy_construction
@@ -227,12 +236,12 @@ func update_building_preview(building_target: String = "") -> void:
     else:
         building_preview_sprite.visible = false
 
-func is_cell_available_for_building(position: Vector2) -> bool:
+func is_cell_available_for_building(position: Vector2, construction_type: String = CONSTRUCTION_TYPE_STONE_WALL) -> bool:
     var battlefield_data = self.game_data.battlefield_data
 
     var cell_position = main_tile_map.world_to_map(position)
     var current_cell_type: String = battlefield_data[cell_position.y][cell_position.x].type
-    battlefield_data[cell_position.y][cell_position.x].type = CONSTRUCTION_TYPE_STONE_WALL
+    battlefield_data[cell_position.y][cell_position.x].type = construction_type
     var came_from_map = utils.get_came_from_map(
         battlefield_data,
         self.game_data.start_position,
@@ -481,14 +490,25 @@ func on_tower_selected(tower: Node2D) -> void:
             return
         self.remove_construction(tower.position)
     else:
-        tower.toggle_radius_visibility()
+        if self.last_selected_building and self.last_selected_building != tower:
+            self.last_selected_building.toggle_radius_visibility()
+            tower.toggle_radius_visibility()
+            self.last_selected_building = tower
+        elif self.last_selected_building and self.last_selected_building == tower:
+            self.last_selected_building = null
+            tower.toggle_radius_visibility()
+        else:
+            self.last_selected_building = tower
+            tower.toggle_radius_visibility()
+
 
 # @TODO use same construction types in building menus as in battlefield scene
 func _on_BuildingMenu_building_target_selected(construction_type):
     if construction_type == 0:
         target_building = CONSTRUCTION_TYPE_DESTROY
     elif construction_type == 1:
-        target_building = CONSTRUCTION_TYPE_TOWER_BASEMENT
+        # target_building = CONSTRUCTION_TYPE_TOWER_BASEMENT
+        target_building = CONSTRUCTION_TYPE_BARRICADE
     elif construction_type == 2:
         target_building = CONSTRUCTION_TYPE_BALLISTA_TOWER
     elif construction_type == 3:
@@ -533,7 +553,7 @@ func _on_BattleField_gui_input(event: InputEvent):
                 if target_building == "":
                     return
 
-                if (not self.is_cell_available_for_building(event.position) and
+                if (not self.is_cell_available_for_building(event.position, target_building) and
                     target_building != CONSTRUCTION_TYPE_DESTROY):
                     return
 

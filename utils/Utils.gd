@@ -4,7 +4,7 @@ static func find_the_path(came_from_map: Dictionary, current_position: Vector2, 
 
     # combine path from came_from_map notes
     if target_was_found:
-        if randi() % 100 > 99: print_debug('combine')
+        # if randi() % 100 > 99: print_debug('combine')
         var way_points = [target_position]
         var previous_cell = target_position
         while current_position.distance_squared_to(previous_cell) != 0:
