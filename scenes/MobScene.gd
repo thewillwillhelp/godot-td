@@ -3,12 +3,12 @@ extends Node2D
 var utils: GDScript = preload("res://utils/Utils.gd")
 
 """
-lvl  entity_type  max_hp   speed
- 1       1          8        50
- 2       1          16       50
+entity_type  lvl   max_hp   speed  able_to_break_barricade
+    1         1      8        50        1
+    1         2     16        50        1
 
- 1       2          3        90
- 2       2          6        90
+    2         1      3        90        0
+    2         2      6        90        0
 """
 
 signal was_killed
@@ -26,9 +26,9 @@ var max_hp: int = 4
 var speed: float = 50
 var default_speed: int = 50
 var world_tilemap: TileMap
-# var came_from_map: Dictionary
 # target position in tilemap cells
 var target_position: Vector2
+var is_able_to_break_barricade: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -45,8 +45,16 @@ func _process(delta) -> void:
     var distance = delta * speed
     move_along_path(distance)
 
-func move_along_path(distance) -> void:
+func move_along_path(distance: float) -> void:
     var start_position = position
+
+    if len(escape_path) > 1:
+        # do not allow to return to previous point after reconstruction of the path
+        var angle = (escape_path[0] - start_position).angle_to(escape_path[1] - start_position)
+        if abs(angle) > PI - PI/20 and abs(angle) < PI + PI/20:
+            escape_path.remove(0)
+
+
     update_path_line()
     for i in range(escape_path.size()):
         var distance_to_next = start_position.distance_to(escape_path[0])
@@ -98,6 +106,8 @@ func _on_Area2D_area_entered(area: Area2D) -> void:
 
     if area.entity_class == "Construction":
         self.speed = area.movement_factor * self.speed
+        if self.is_able_to_break_barricade:
+            area.reduce_durability()
 
 func on_battlefield_data_changed(updated_battlefield_data: Array) -> void:
     update_escaped_path(updated_battlefield_data)
@@ -121,6 +131,7 @@ func update_params_according_type() -> void:
     if self.entity_type == 1:
         self.max_hp = 8
         self.speed = 50
+        self.is_able_to_break_barricade = true
     if self.entity_type == 2:
         self.max_hp = 3
         self.speed = 90

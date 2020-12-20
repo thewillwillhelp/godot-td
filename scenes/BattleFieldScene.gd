@@ -331,6 +331,7 @@ func add_construction_to_battlefield(battlefield_data: Array, cell_position: Vec
 
     tower.position = main_tile_map.map_to_world(cell_position) + Vector2(25, 25)
     tower.connect("tower_was_selected", self, "on_tower_selected")
+    tower.connect("construction_request_destroying", self, "on_construction_request_destroying", [tower.position])
     $BattleField.add_child(tower)
     tower.battle_field = $BattleField
 
@@ -500,6 +501,9 @@ func on_tower_selected(tower: Node2D) -> void:
         else:
             self.last_selected_building = tower
             tower.toggle_radius_visibility()
+
+func on_construction_request_destroying(position):
+    self.remove_construction(position)
 
 
 # @TODO use same construction types in building menus as in battlefield scene

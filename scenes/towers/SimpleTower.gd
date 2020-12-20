@@ -1,6 +1,7 @@
 extends Node2D
 
 signal tower_was_selected
+signal construction_request_destroying
 
 const PREVIEW_TOWER_RECT: Rect2 = Rect2(50, 0, 50, 100)
 const PREVIEW_CANNON_TOWER_RECT: Rect2 = Rect2(100, 0, 50, 100)
@@ -12,8 +13,8 @@ const TEXTURE_SPRITESET = preload("res://assets/images/SpriteSet.png")
 var bullet_scene: PackedScene = preload("res://scenes/bullets/Simple_Bullet.tscn")
 var battle_field: Node
 var entity_class = "Construction"
-var max_durablity = 5
-var durability = 5
+var max_durablity = 20
+var durability = 20
 var entity_type = 1
 var bullet_type = 0
 var cooldown_time: float = 1
@@ -28,12 +29,14 @@ func _ready():
     set_process(false)
 
     if self.entity_type == 1:
+        # wall
         $Sprite.visible = false
         $Sprite.set_offset(Vector2(0, -25))
         $Sprite.texture = TEXTURE_SPRITESET
         $Sprite.region_rect = PREVIEW_WALL_RECT
         self.bullet_type = 0
     elif self.entity_type == 2:
+        # tower
         $Sprite.visible = false
         $Sprite.set_offset(Vector2(0, -25))
         $Sprite.texture = TEXTURE_SPRITESET
@@ -42,6 +45,7 @@ func _ready():
         self.cooldown_time = 1
         self.bullet_type = 1
     elif self.entity_type == 3:
+        # cannon tower
         $Sprite.visible = false
         $Sprite.set_offset(Vector2(0, -25))
         $Sprite.texture = TEXTURE_SPRITESET
@@ -50,6 +54,7 @@ func _ready():
         self.cooldown_time = 1.5
         self.bullet_type = 2
     elif self.entity_type == 4:
+        # barricade
         $Sprite.visible = true
         $Sprite.texture = TEXTURE_BARRICADE
         $Sprite.set_scale(Vector2(0.5, 0.5))
@@ -139,4 +144,10 @@ func update_loading_progress_indicator():
         $TextureProgress.value = self.reloading_timer_counter / self.cooldown_time * 100
 
 func reduce_durability():
-    pass
+    if self.entity_type != 4:
+        return
+
+    self.durability -= 1
+    if self.durability <= 0:
+        self.emit_signal("construction_request_destroying")
+
