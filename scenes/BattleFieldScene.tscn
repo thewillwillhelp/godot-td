@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://scenes/BattleFieldScene.gd" type="Script" id=1]
 [ext_resource path="res://scenes/Battle_GUI.tscn" type="PackedScene" id=2]
@@ -7,6 +7,7 @@
 [ext_resource path="res://assets/images/exit-portal.png" type="Texture" id=5]
 [ext_resource path="res://assets/images/enter-portal.png" type="Texture" id=6]
 [ext_resource path="res://assets/images/main-background-v2.png" type="Texture" id=7]
+[ext_resource path="res://scenes/GameData.gd" type="Script" id=8]
 [ext_resource path="res://assets/images/particles/effect_4.png" type="Texture" id=9]
 [ext_resource path="res://scenes/swipe_detector.gd" type="Script" id=11]
 
@@ -152,6 +153,9 @@ scale = Vector2( 1.5, 1.5 )
 speed_scale = 0.5
 process_material = SubResource( 5 )
 texture = ExtResource( 9 )
+
+[node name="GameData" type="Node" parent="."]
+script = ExtResource( 8 )
 [connection signal="gui_input" from="BattleField" to="." method="_on_BattleField_gui_input"]
 [connection signal="timeout" from="mob_create_timer" to="." method="_on_mob_create_timer_timeout"]
 [connection signal="area_entered" from="ExitArea" to="." method="_on_ExitArea_area_entered"]

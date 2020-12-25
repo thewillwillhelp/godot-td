@@ -85,6 +85,9 @@ var default_game_data: Dictionary = {
     "field_width": DEFAULT_BATTLEFIELD_COLUMNS_NUMBER,
     "field_height": DEFAULT_BATTLEFIELD_ROWS_NUMBER,
     "gold": 25,
+    "ruby": 1,
+    "sapphire": 1,
+    "topaz": 1,
     "game_level": 1,
     "lives": 25,
     "current_wave": 0
@@ -125,6 +128,9 @@ func start_game(is_game_new: bool = true, preloaded_game_data: Dictionary = {}) 
         else:
             self.game_data = utils.merge_dictionaries(default_game_data.duplicate(), preloaded_game_data)
 
+
+    $GameData.set_game_data(self.game_data)
+    $GameData.set_battle_field_scene(self)
     main_tile_map.clear()
     $ExitArea.position = main_tile_map.map_to_world(self.game_data.end_position) + Vector2(25, 25)
     $EnterArea.position = main_tile_map.map_to_world(self.game_data.start_position) + Vector2(25, 25)
@@ -206,35 +212,43 @@ func update_score_label() -> void:
     prepared_text += "Level: %d\n" % game_level
     prepared_text += "Lives: %d" % lives
     if time_to_next_wave > 0:
-        prepared_text += "            Next Wave in %d sec" % time_to_next_wave
+        $GUI.set_notification_text("Next Wave in %d sec" % time_to_next_wave)
+        $GUI.set_notification_visibility(true)
+    else:
+        $GUI.set_notification_visibility(false)
+    $GUI.update_currency_bar("ruby", self.game_data.ruby)
+    $GUI.update_currency_bar("sapphire", self.game_data.sapphire)
+    $GUI.update_currency_bar("topaz", self.game_data.topaz)
     # prepared_text += "\nLeft: %d" % [ self.current_wave_counter ]
-    $GUI/ScoreLabel.text = prepared_text;
+    $GUI/MainInfoBox/ScoreLabel.text = prepared_text;
 
 func update_building_preview(building_target: String = "") -> void:
-    var building_preview_sprite = $GUI/SelectionPreview/Button/Sprite
-    building_preview_sprite.set_scale(Vector2(2, 2))
-    building_preview_sprite.texture = icons_sprite_set
+    var sprite = icons_sprite_set
+    var scale = Vector2(2, 2)
+    var region
+    var show_preview_image = true
+
     if building_target == CONSTRUCTION_TYPE_BALLISTA_TOWER:
-        building_preview_sprite.set_region_rect(PREVIEW_TOWER_RECT)
-        building_preview_sprite.visible = true
+        region = PREVIEW_TOWER_RECT
     elif building_target == CONSTRUCTION_TYPE_CANNON_TOWER:
-        building_preview_sprite.set_region_rect(PREVIEW_CANNON_TOWER_RECT)
-        building_preview_sprite.visible = true
+        region = PREVIEW_CANNON_TOWER_RECT
     elif building_target == CONSTRUCTION_TYPE_TOWER_BASEMENT:
-        building_preview_sprite.set_region_rect(PREVIEW_WALL_RECT)
-        building_preview_sprite.visible = true
+        region = PREVIEW_WALL_RECT
     elif building_target == CONSTRUCTION_TYPE_BARRICADE:
-        building_preview_sprite.set_scale(Vector2(1, 1))
-        building_preview_sprite.texture = icon_construction_barricade
-        building_preview_sprite.set_region_rect(PREVIEW_DESTROY_CONSTRUCTION_RECT)
-        building_preview_sprite.visible = true
+        region = PREVIEW_DESTROY_CONSTRUCTION_RECT
+        scale = Vector2(1, 1)
+        sprite = icon_construction_barricade
     elif building_target == CONSTRUCTION_TYPE_DESTROY:
-        building_preview_sprite.set_scale(Vector2(1, 1))
-        building_preview_sprite.texture = icon_destroy_construction
-        building_preview_sprite.set_region_rect(PREVIEW_DESTROY_CONSTRUCTION_RECT)
-        building_preview_sprite.visible = true
+        region = PREVIEW_DESTROY_CONSTRUCTION_RECT
+        scale = Vector2(1, 1)
+        sprite = icon_destroy_construction
     else:
-        building_preview_sprite.visible = false
+        $GUI.set_preview_image_visibility(false)
+        show_preview_image = false
+
+    if show_preview_image:
+        $GUI.set_preview_image(sprite, scale, region)
+        $GUI.set_preview_image_visibility(true)
 
 func is_cell_available_for_building(position: Vector2, construction_type: String = CONSTRUCTION_TYPE_STONE_WALL) -> bool:
     var battlefield_data = self.game_data.battlefield_data
@@ -485,22 +499,38 @@ func _on_SelectionPreview_pressed() -> void:
     target_building = ""
     update_building_preview(target_building)
 
-func on_tower_selected(tower: Node2D) -> void:
+func on_tower_selected(construction: Node2D) -> void:
     if target_building == CONSTRUCTION_TYPE_DESTROY:
         if $SwipeDetector.is_screen_moved():
             return
-        self.remove_construction(tower.position)
+        self.remove_construction(construction.position)
     else:
-        if self.last_selected_building and self.last_selected_building != tower:
+        if not construction.can_be_improved:
+            self.on_unselect_tower()
+            return
+
+        print_debug("select")
+
+        if self.last_selected_building and self.last_selected_building != construction:
             self.last_selected_building.toggle_radius_visibility()
-            tower.toggle_radius_visibility()
-            self.last_selected_building = tower
-        elif self.last_selected_building and self.last_selected_building == tower:
-            self.last_selected_building = null
-            tower.toggle_radius_visibility()
+            construction.toggle_radius_visibility()
+            self.last_selected_building = construction
+            $GUI.set_upgrading_menu_target(construction, $GameData)
+            $GUI.set_upgrading_menu_visibility(true)
+        elif self.last_selected_building and self.last_selected_building == construction:
+            self.on_unselect_tower()
         else:
-            self.last_selected_building = tower
-            tower.toggle_radius_visibility()
+            self.last_selected_building = construction
+            construction.toggle_radius_visibility()
+            $GUI.set_upgrading_menu_target(construction, $GameData)
+            $GUI.set_upgrading_menu_visibility(true)
+
+func on_unselect_tower():
+    print_debug("unselect")
+    if self.last_selected_building:
+        last_selected_building.toggle_radius_visibility()
+    self.last_selected_building = null
+    $GUI.set_upgrading_menu_visibility(false)
 
 func on_construction_request_destroying(position):
     self.remove_construction(position)
@@ -547,12 +577,16 @@ func _on_StartWaveButton_pressed() -> void:
 
 func _on_BattleField_gui_input(event: InputEvent):
     if event is InputEventMouseButton:
-        # var battleFieldRect = $BattleField.get_rect()
         if event.button_index == BUTTON_LEFT:
             if $SwipeDetector.is_screen_moved():
                 return
 
             if not event.is_pressed():
+
+                # clear any tower selection
+                # $GUI.set_upgrading_menu_visibility(false)
+                self.on_unselect_tower()
+
 
                 if target_building == "":
                     return
@@ -566,7 +600,6 @@ func _on_BattleField_gui_input(event: InputEvent):
                 else:
                     self.on_try_build_construction(event.position, target_building)
 
-                # target_building = ""
                 self.update_building_preview(target_building)
 
         if event.button_index == BUTTON_RIGHT:

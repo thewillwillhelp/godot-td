@@ -11,19 +11,20 @@ var min_damage: int = 1
 var max_damage: int = 5
 var max_affected_targets: int = 1
 var affected_targets: int = 0
+var damage_multiplier: float = 1.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
     set_process(false)
 
     if entity_type == 1:
-        self.min_damage = 1
-        self.max_damage = 5
+        self.min_damage = 1 * damage_multiplier
+        self.max_damage = 5 * damage_multiplier
         self.speed = 250
         $Sprite.texture = ballista_bullet_texture
     elif entity_type == 2:
-        self.min_damage = 5
-        self.max_damage = 15
+        self.min_damage = 5 * damage_multiplier
+        self.max_damage = 15 * damage_multiplier
         self.speed = 175
         self.max_affected_targets = 5
         $Sprite.texture = cannon_bullet_texture
