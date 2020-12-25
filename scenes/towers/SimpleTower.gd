@@ -229,6 +229,18 @@ func upgrade(type: String, game_data: Node) -> bool:
     self.update()
     return true
 
+func export_data_to_save() -> Dictionary:
+    return {
+        "attack_speed_booster": self.attack_speed_booster,
+        "range_booster": self.range_booster,
+        "damage_booster": self.damage_booster
+    }
+
+func apply_loaded_data(data: Dictionary) -> void:
+    self.attack_speed_booster = data.attack_speed_booster
+    self.range_booster = data.range_booster
+    self.damage_booster = data.damage_booster
+    self.recalculate_parameters()
 
 func recalculate_parameters():
     var construction_type = self.get_type_of_construction_by_id(self.entity_type)

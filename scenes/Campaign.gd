@@ -2,6 +2,14 @@ extends Node2D
 
 const BattleFieldScene: PackedScene = preload("res://scenes/BattleFieldScene.tscn")
 const utils: GDScript = preload("res://utils/Utils.gd")
+const transfered_fields = [
+    "ruby",
+    "topaz",
+    "sapphire",
+    "score",
+    "gold",
+    "lives"
+]
 
 onready var battle_field_scene = BattleFieldScene.instance()
 const max_level = 5
@@ -27,7 +35,7 @@ func start_campaign_level():
     battle_field_scene.connect("waves_finished", self, "finish_level")
 
 func finish_level():
-    previous_game_data = utils.merge_dictionaries_by_fields({}, battle_field_scene.game_data, ["score", "gold", "lives"])
+    previous_game_data = utils.merge_dictionaries_by_fields({}, battle_field_scene.game_data, transfered_fields)
     current_level += 1
 
     if self.current_level > self.max_level:

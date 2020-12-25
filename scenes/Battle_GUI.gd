@@ -2,6 +2,7 @@ extends CanvasLayer
 
 signal command_send(command_name)
 signal building_target_selected(construction_type)
+signal building_menu_visibility_changed(visible)
 
 var start_texture = preload("res://assets/images/play-button.png")
 var pause_texture = preload("res://assets/images/pause-button.png")
@@ -28,6 +29,14 @@ func _ready():
 
 func show_game_over_menu():
     $GameOverMenu.show()
+
+func set_building_menu_visibility(visible: bool = false) -> void:
+    if visible:
+        $BuildingMenu.show()
+    else:
+        $BuildingMenu.hide()
+
+    self.emit_signal("building_menu_visibility_changed", visible)
 
 func set_preview_image(sprite, scale: Vector2, region_rect: Rect2) -> void:
     selection_preview_image.set_scale(scale)
@@ -68,13 +77,13 @@ func _on_building_menu_event(construction_type: int) -> void:
     emit_signal("building_target_selected", construction_type)
 
 func _on_BuildingMenu_close_menu():
-    $BuildingMenu.hide()
+    self.set_building_menu_visibility()
 
 func _on_BuildingMenuButton_pressed():
     if not $BuildingMenu.visible:
-        $BuildingMenu.show()
+        self.set_building_menu_visibility(true)
     else:
-        $BuildingMenu.hide()
+        self.set_building_menu_visibility()
 
 func _on_setting_button_click():
     if not $SettingsMenu.visible:

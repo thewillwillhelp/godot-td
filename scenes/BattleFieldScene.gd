@@ -107,6 +107,7 @@ func _ready():
     $Camera2D.position = center_position
     main_tile_map = $BattleField/MainTileMap
     background_tile_map = $BattleField/BackgroundTileMap
+    $GUI.connect("building_menu_visibility_changed", self, "_on_building_menu_visibility_changed")
 
     if globals.game_should_be_loaded:
         self.load_game()
@@ -343,6 +344,10 @@ func add_construction_to_battlefield(battlefield_data: Array, cell_position: Vec
         tower.queue_free()
         return
 
+    if "data" in battlefield_data[cell_position.y][cell_position.x]:
+        tower.apply_loaded_data(battlefield_data[cell_position.y][cell_position.x].data)
+        battlefield_data[cell_position.y][cell_position.x].erase("data")
+
     tower.position = main_tile_map.map_to_world(cell_position) + Vector2(25, 25)
     tower.connect("tower_was_selected", self, "on_tower_selected")
     tower.connect("construction_request_destroying", self, "on_construction_request_destroying", [tower.position])
@@ -377,6 +382,11 @@ func save_game():
 
     # prepare data to save:
     var data_to_save = self.game_data.duplicate()
+    for row in data_to_save.battlefield_data:
+        for cell in row:
+            if "construction" in cell:
+                cell.data = cell.construction.export_data_to_save()
+                cell.erase("construction")
 
     file_to_save.store_var(data_to_save)
     file_to_save.close()
@@ -397,7 +407,6 @@ func load_game() -> void:
                 cell.erase("construction")
 
     self.reset_game()
-    print_debug("next: reload game data")
     self.game_data = loaded_game_data
     self.start_game(false)
 
@@ -465,6 +474,15 @@ func get_camera_borders(game_data) -> Dictionary:
     camera_borders.max = Vector2(broder_max_x, broder_max_y)
     return camera_borders
 
+func add_random_booster_token() -> void:
+    var random_type_index = randi() % 3
+    if random_type_index == 0:
+        $GameData.increase_boosters_number("ruby")
+    if random_type_index == 1:
+        $GameData.increase_boosters_number("topaz")
+    if random_type_index == 2:
+        $GameData.increase_boosters_number("sapphire")
+
 
 #####
 # Listeners:
@@ -496,8 +514,8 @@ func _on_Reset_Game_pressed() -> void:
     self.reset_game()
 
 func _on_SelectionPreview_pressed() -> void:
-    target_building = ""
-    update_building_preview(target_building)
+    self.target_building = ""
+    self.update_building_preview(self.target_building)
 
 func on_tower_selected(construction: Node2D) -> void:
     if target_building == CONSTRUCTION_TYPE_DESTROY:
@@ -509,7 +527,7 @@ func on_tower_selected(construction: Node2D) -> void:
             self.on_unselect_tower()
             return
 
-        print_debug("select")
+        $GUI.set_building_menu_visibility(false)
 
         if self.last_selected_building and self.last_selected_building != construction:
             self.last_selected_building.toggle_radius_visibility()
@@ -526,9 +544,8 @@ func on_tower_selected(construction: Node2D) -> void:
             $GUI.set_upgrading_menu_visibility(true)
 
 func on_unselect_tower():
-    print_debug("unselect")
     if self.last_selected_building:
-        last_selected_building.toggle_radius_visibility()
+        self.last_selected_building.toggle_radius_visibility()
     self.last_selected_building = null
     $GUI.set_upgrading_menu_visibility(false)
 
@@ -541,7 +558,6 @@ func _on_BuildingMenu_building_target_selected(construction_type):
     if construction_type == 0:
         target_building = CONSTRUCTION_TYPE_DESTROY
     elif construction_type == 1:
-        # target_building = CONSTRUCTION_TYPE_TOWER_BASEMENT
         target_building = CONSTRUCTION_TYPE_BARRICADE
     elif construction_type == 2:
         target_building = CONSTRUCTION_TYPE_BALLISTA_TOWER
@@ -584,9 +600,7 @@ func _on_BattleField_gui_input(event: InputEvent):
             if not event.is_pressed():
 
                 # clear any tower selection
-                # $GUI.set_upgrading_menu_visibility(false)
                 self.on_unselect_tower()
-
 
                 if target_building == "":
                     return
@@ -626,6 +640,8 @@ func _on_ExitArea_area_entered(area: Area2D) -> void:
 func on_kill_mob():
     self.game_data.gold += randi() % 2 + 1
     self.game_data.score += 1 * self.game_data.game_level
+    if randi() % 100 > 90:
+        self.add_random_booster_token()
     check_and_update_game_level()
     update_score_label()
 
@@ -670,6 +686,10 @@ func _on_Node_swipe_is_happened(position_diff: Vector2):
 func _on_mob_disappear():
     self.reduce_number_of_mobs(1)
     self.update_score_label()
+
+func _on_building_menu_visibility_changed(visible: bool):
+    if visible:
+        $GUI.set_upgrading_menu_visibility(false)
 
 func wait(seconds: int = 1, target = null, fnName = null) -> void:
     var root_tree := get_tree()
