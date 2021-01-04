@@ -1,6 +1,7 @@
 extends Node2D
 
 export (PackedScene) var mob_scene: PackedScene
+export (PackedScene) var bonus_scene: PackedScene
 
 signal waves_finished
 
@@ -483,6 +484,12 @@ func add_random_booster_token() -> void:
     if random_type_index == 2:
         $GameData.increase_boosters_number("sapphire")
 
+func generate_bonus(position: Vector2) -> void:
+    var bonus = bonus_scene.instance()
+    $BattleField.add_child(bonus)
+    bonus.position = position
+    bonus.connect("clicked", self, "on_bonus_click")
+
 
 #####
 # Listeners:
@@ -637,11 +644,13 @@ func _on_ExitArea_area_entered(area: Area2D) -> void:
         if self.game_data.lives == 0:
             self.finish_game()
 
-func on_kill_mob():
+func on_kill_mob(entity: Node2D):
     self.game_data.gold += randi() % 2 + 1
     self.game_data.score += 1 * self.game_data.game_level
     if randi() % 100 > 90:
         self.add_random_booster_token()
+    if randi() % 100 > 90:
+        self.generate_bonus(entity.position)
     check_and_update_game_level()
     update_score_label()
 
@@ -690,6 +699,10 @@ func _on_mob_disappear():
 func _on_building_menu_visibility_changed(visible: bool):
     if visible:
         $GUI.set_upgrading_menu_visibility(false)
+
+func on_bonus_click() -> void:
+    self.game_data.gold += randi() % 5 + 1
+    self.update_score_label()
 
 func wait(seconds: int = 1, target = null, fnName = null) -> void:
     var root_tree := get_tree()

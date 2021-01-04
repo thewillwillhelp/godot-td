@@ -18,8 +18,8 @@ const CONSTRUCTION_TYPE__BARRICADE = "BARRICADE"
 var bullet_scene: PackedScene = preload("res://scenes/bullets/Simple_Bullet.tscn")
 var battle_field: Node
 var entity_class = "Construction"
-var max_durablity = 20
-var durability = 20
+var max_durablity = 50
+var durability = 50
 var entity_type = 1
 var bullet_type = 0
 var cooldown_time: float = 1

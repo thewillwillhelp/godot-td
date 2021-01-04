@@ -11,7 +11,7 @@ entity_type  lvl   max_hp   speed  able_to_break_barricade
     2         2      6        90        0
 """
 
-signal was_killed
+signal was_killed(entity)
 
 # UI constants
 const HP_INDICATOR_MAX_WIDTH = 38
@@ -54,11 +54,17 @@ func move_along_path(distance: float) -> void:
         if abs(angle) > PI - PI/20 and abs(angle) < PI + PI/20:
             escape_path.remove(0)
 
+    var angle = (escape_path[0] - start_position).angle()
+    #if abs(angle) > PI - PI/20 and abs(angle) < PI + PI/20:
+    $Sprite.set_rotation_degrees(angle/PI*180+90)
 
     update_path_line()
     for i in range(escape_path.size()):
         var distance_to_next = start_position.distance_to(escape_path[0])
         if distance <= distance_to_next and distance >= 0:
+            # start_position.angle_to()
+
+
             position = start_position.linear_interpolate(escape_path[0], distance / distance_to_next)
             break
         elif distance < 0:
@@ -93,7 +99,7 @@ func receive_damage(bullet: Area2D) -> void:
     # @TODO add some animation
 
     if hit_points <= 0:
-        self.emit_signal("was_killed")
+        self.emit_signal("was_killed", self)
         self.queue_free()
 
 func _on_Area2D_area_entered(area: Area2D) -> void:
